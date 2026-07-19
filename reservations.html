@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Reservations — Aurora Bistro</title>
+<meta name="description" content="Book your dining experience at Aurora Bistro. Live table availability, special requests, and direct confirmation."/>
+<link rel="stylesheet" href="css/aurora.css"/>
+<style>
+.reserve-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 48px;
+  margin-top: 48px;
+}
+.reserve-panel {
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+}
+/* Progress Steps */
+.reserve-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  position: relative;
+}
+.reserve-steps::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--bg-surface);
+  z-index: 0;
+  transform: translateY(-50%);
+}
+.step-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+  z-index: 1;
+  transition: all 0.3s;
+}
+.step-dot.active {
+  background: var(--bg-card);
+  border-color: var(--gold-400);
+  color: var(--gold-300);
+  box-shadow: var(--glow-gold);
+}
+.step-dot.completed {
+  background: var(--gold-500);
+  border-color: var(--gold-500);
+  color: var(--bg-void);
+}
+
+/* Custom Calendar Picker */
+.cal-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 8px;
+}
+.cal-title {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+.cal-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-warm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.cal-btn:hover {
+  background: var(--bg-raised);
+  border-color: var(--gold-500);
+}
+.cal-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  text-align: center;
+}
+.cal-day-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  padding: 6px 0;
+}
+.cal-cell {
+  padding: 10px 0;
+  border-radius: 8px;
+  background: rgba(30,20,10,0.4);
+  border: 1px solid var(--border-warm);
+  font-size: 13px;
+  color: var(--text-warm);
+  cursor: pointer;
+  transition: all 0.25s var(--ease);
+}
+.cal-cell:hover:not(.disabled):not(.selected) {
+  border-color: var(--gold-500);
+  background: rgba(212,168,72,0.06);
+}
+.cal-cell.disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+.cal-cell.selected {
+  background: var(--gold-500);
+  border-color: var(--gold-500);
+  color: var(--bg-void);
+  font-weight: 700;
+  box-shadow: var(--glow-gold);
+}
+
+/* Time Slots */
+.time-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+.time-slot {
+  padding: 10px 6px;
+  border-radius: 6px;
+  background: rgba(30,20,10,0.4);
+  border: 1px solid var(--border-warm);
+  text-align: center;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.time-slot:hover:not(.disabled):not(.selected) {
+  border-color: var(--gold-500);
+  color: var(--text-bright);
+}
+.time-slot.selected {
+  background: var(--gold-500);
+  border-color: var(--gold-500);
+  color: var(--bg-void);
+  font-weight: 600;
+  box-shadow: var(--glow-gold);
+}
+.time-slot.disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+/* Party Selector */
+.party-selector {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.party-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(30,20,10,0.4);
+  border: 1px solid var(--border-warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all 0.25s var(--ease-spring);
+}
+.party-circle:hover:not(.selected) {
+  border-color: var(--gold-500);
+  transform: scale(1.08);
+}
+.party-circle.selected {
+  background: var(--gold-500);
+  border-color: var(--gold-500);
+  color: var(--bg-void);
+  font-weight: 700;
+  transform: scale(1.12);
+  box-shadow: var(--glow-gold);
+}
+
+/* Form Steps Panels */
+.step-panel {
+  display: none;
+  animation: fadeUp 0.5s var(--ease) forwards;
+}
+.step-panel.active {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Info Side Panel */
+.info-panel {
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.info-section-title {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  color: var(--text-bright);
+}
+.availability-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.feed-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 8px;
+  border: 1px solid var(--border-warm);
+  font-size: 13px;
+}
+.feed-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.feed-indicator.green { background: #50c864; box-shadow: 0 0 8px #50c864; }
+.feed-indicator.amber { background: #e0a020; box-shadow: 0 0 8px #e0a020; }
+.feed-indicator.red { background: #c03a10; box-shadow: 0 0 8px #c03a10; }
+
+/* Success Card */
+#success-card {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 40px;
+  animation: scaleIn 0.5s var(--ease-spring) forwards;
+}
+.success-checkmark {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(80,200,100,0.1);
+  border: 2px solid #50c864;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  box-shadow: 0 0 20px rgba(80,200,100,0.2);
+}
+.checkmark-svg {
+  width: 36px;
+  height: 36px;
+  stroke: #50c864;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  stroke-dasharray: 50;
+  stroke-dashoffset: 50;
+  animation: checkAnim 0.6s var(--ease) 0.3s forwards;
+}
+
+.countdown-box {
+  margin-top: 24px;
+  padding: 16px 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-gold);
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  color: var(--gold-300);
+}
+
+@media(max-width: 900px) {
+  .reserve-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+
+<nav id="aurora-nav">
+  <a href="index.html" class="nav-logo">Aurora <span>Bistro</span></a>
+  <div class="nav-links">
+    <a href="index.html"        class="nav-link">Home</a>
+    <a href="menu.html"         class="nav-link">Menu</a>
+    <a href="reservations.html" class="nav-link active">Reservations</a>
+    <a href="kitchen.html"      class="nav-link">Our Story</a>
+    <a href="reviews.html"      class="nav-link">Reviews</a>
+    <a href="admin.html"        class="nav-link">Admin</a>
+  </div>
+  <a href="reservations.html" class="nav-cta btn-liquid">Reserve a Table</a>
+</nav>
+
+<div class="page-hero">
+  <div class="page-hero-bg"></div>
+  <div class="page-hero-content">
+    <div class="section-label">Book a Table</div>
+    <h1 class="section-title">Join Us For An <em>Evening</em></h1>
+    <p class="section-sub">Experience handcrafted culinary journeys under soft golden lighting. Please fill in the details below to secure your booking.</p>
+  </div>
+</div>
+
+<section style="padding: 48px 0 100px; background: var(--bg-deep);">
+  <div class="container">
+    <div class="reserve-grid">
+      <!-- MAIN BOOKING PANEL -->
+      <div class="glass glass-glow reserve-panel" id="booking-container">
+        <!-- Steps Indicator -->
+        <div class="reserve-steps">
+          <div class="step-dot active" id="step-dot-1">1</div>
+          <div class="step-dot" id="step-dot-2">2</div>
+          <div class="step-dot" id="step-dot-3">3</div>
+        </div>
+
+        <form id="reserve-form" onsubmit="event.preventDefault(); submitReservation();">
+          <!-- STEP 1: Date & Time -->
+          <div class="step-panel active" id="panel-1">
+            <div class="cal-container">
+              <div class="cal-header">
+                <span class="cal-title" id="cal-month-title">July 2026</span>
+                <div style="display:flex; gap:6px;">
+                  <button type="button" class="cal-btn" onclick="prevMonth()">◀</button>
+                  <button type="button" class="cal-btn" onclick="nextMonth()">▶</button>
+                </div>
+              </div>
+              <div class="cal-days-grid" id="cal-days">
+                <!-- Days will be dynamically rendered -->
+              </div>
+            </div>
+
+            <div>
+              <div class="form-label" style="margin-bottom:12px;">Preferred Time</div>
+              <div class="time-slots" id="time-slots-container">
+                <!-- Time slots generated by JS -->
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+              <button type="button" class="btn btn-primary btn-liquid" onclick="nextStep(2)">Continue</button>
+            </div>
+          </div>
+
+          <!-- STEP 2: Party Size & Seating -->
+          <div class="step-panel" id="panel-2">
+            <div>
+              <div class="form-label" style="margin-bottom:12px;">Number of Guests</div>
+              <div class="party-selector">
+                <div class="party-circle selected" onclick="selectParty(1, this)">1</div>
+                <div class="party-circle" onclick="selectParty(2, this)">2</div>
+                <div class="party-circle" onclick="selectParty(3, this)">3</div>
+                <div class="party-circle" onclick="selectParty(4, this)">4</div>
+                <div class="party-circle" onclick="selectParty(5, this)">5</div>
+                <div class="party-circle" onclick="selectParty(6, this)">6</div>
+                <div class="party-circle" onclick="selectParty(8, this)">8+</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="table-pref">Seating Preference</label>
+              <select class="form-select" id="table-pref">
+                <option value="any">Any Available</option>
+                <option value="dining-room">Main Dining Room (Warm & Lively)</option>
+                <option value="bar">Bar Counter (Interactive & Sleek)</option>
+                <option value="window">Window Side (Cosy & Romantic)</option>
+                <option value="terrace">Private Dining Area (Quiet & Elegant)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="special-req">Special Notes / Dietary Requirements</label>
+              <textarea class="form-textarea" id="special-req" placeholder="Allergies, wheelchair access, anniversary, birthday requests..."></textarea>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:16px;">
+              <button type="button" class="btn btn-ghost" onclick="prevStep(1)">Back</button>
+              <button type="button" class="btn btn-primary btn-liquid" onclick="nextStep(3)">Continue</button>
+            </div>
+          </div>
+
+          <!-- STEP 3: Contact & Confirm -->
+          <div class="step-panel" id="panel-3">
+            <div class="form-group">
+              <label class="form-label" for="guest-name">Full Name</label>
+              <input type="text" class="form-input" id="guest-name" required placeholder="John Doe"/>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="guest-email">Email Address</label>
+              <input type="email" class="form-input" id="guest-email" required placeholder="john@example.com"/>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="guest-phone">Phone Number</label>
+              <input type="tel" class="form-input" id="guest-phone" required placeholder="+1 (123) 456-7890"/>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:16px;">
+              <button type="button" class="btn btn-ghost" onclick="prevStep(2)">Back</button>
+              <button type="submit" class="btn btn-primary btn-liquid" id="submit-btn">Confirm Reservation</button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Loading overlay -->
+        <div id="booking-loader" style="display:none; position:absolute; inset:0; background:rgba(14,10,6,0.9); z-index:100; flex-direction:column; align-items:center; justify-content:center; gap:16px;">
+          <div class="loader-plate"></div>
+          <div style="font-family:var(--font-serif); font-size:16px; color:var(--text-bright);">Securing your table...</div>
+        </div>
+      </div>
+
+      <!-- SUCCESS SCREEN -->
+      <div class="glass glass-glow" id="success-card">
+        <div class="success-checkmark">
+          <svg class="checkmark-svg" viewBox="0 0 52 52">
+            <path d="M14 27 l8 8 l16 -16"/>
+          </svg>
+        </div>
+        <h2 class="section-title" style="font-size:28px; margin-bottom:12px;">Reservation Confirmed</h2>
+        <p style="color:var(--text-mid); font-size:14px; max-width:320px; line-height:1.6; margin-bottom:20px;" id="success-msg">
+          Thank you. Your table has been reserved for July 20, 2026. A calendar invitation has been sent to your email.
+        </p>
+        <div class="divider" style="max-width:240px; margin: 16px auto;"></div>
+        <div class="countdown-box" id="countdown">00:00:00</div>
+        <div style="margin-top: 24px; display:flex; gap:12px;">
+          <a href="index.html" class="btn btn-ghost">Home</a>
+          <a href="menu.html" class="btn btn-primary btn-liquid">View Menu</a>
+        </div>
+      </div>
+
+      <!-- SIDEBAR INFO PANEL -->
+      <div class="glass info-panel">
+        <div>
+          <h3 class="info-section-title" style="margin-bottom:14px;">Availability Feed</h3>
+          <div class="availability-feed">
+            <div class="feed-item">
+              <div class="feed-indicator green"></div>
+              <div style="flex:1">
+                <strong style="color:var(--text-bright);">17:00 – 18:30</strong>
+                <p style="font-size:11px; color:var(--text-dim); margin-top:2px;">Excellent availability. High preference options.</p>
+              </div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-indicator amber"></div>
+              <div style="flex:1">
+                <strong style="color:var(--text-bright);">19:00 – 20:30</strong>
+                <p style="font-size:11px; color:var(--text-dim); margin-top:2px;">Filling fast. Limited window tables remaining.</p>
+              </div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-indicator red"></div>
+              <div style="flex:1">
+                <strong style="color:var(--text-bright);">21:00 – 22:00</strong>
+                <p style="font-size:11px; color:var(--text-dim); margin-top:2px;">Peak hours. Waitlist active for prime tables.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div>
+          <h3 class="info-section-title" style="margin-bottom:12px;">Private Dining</h3>
+          <p style="font-size:13px; color:var(--text-mid); line-height:1.7;">
+            Planning a custom event or chef's table? Our private vault fits up to 14 guests. Complete with tailored wine-pairing menus and raw-edge mahogany tables.
+          </p>
+          <a href="mailto:events@aurorabistro.com" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--gold-400); margin-top:14px; letter-spacing:0.04em;">
+            Contact Events Team <span>→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="js/aurora.js"></script>
+<script>
+// ═════════════════════════════════════════════════════════
+//  Reservations Calendar & Form States
+// ═════════════════════════════════════════════════════════
+
+let currentYear = 2026;
+let currentMonth = 6; // July (0-indexed base)
+let selectedDate = null;
+let selectedTime = null;
+let selectedGuests = 1;
+
+const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const times = ["17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00"];
+
+function renderCalendar() {
+  const container = document.getElementById('cal-days');
+  const monthTitle = document.getElementById('cal-month-title');
+  container.innerHTML = '';
+  
+  monthTitle.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+  
+  // Render Day Labels
+  ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-day-label';
+    el.textContent = d;
+    container.appendChild(el);
+  });
+  
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  
+  // Padding cells
+  for (let i = 0; i < firstDay; i++) {
+    const el = document.createElement('div');
+    container.appendChild(el);
+  }
+  
+  const today = new Date(2026, 6, 19); // base date from system
+  
+  for (let day = 1; day <= daysInMonth; day++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell';
+    cell.textContent = day;
+    
+    const cellDate = new Date(currentYear, currentMonth, day);
+    if (cellDate < today) {
+      cell.classList.add('disabled');
+    } else {
+      cell.onclick = () => selectDateHandler(day, cell);
+      if (selectedDate && selectedDate.day === day && selectedDate.month === currentMonth && selectedDate.year === currentYear) {
+        cell.classList.add('selected');
+      }
+    }
+    container.appendChild(cell);
+  }
+}
+
+function prevMonth() {
+  if (currentMonth === 6 && currentYear === 2026) return; // limit going past July 2026
+  if (currentMonth === 0) {
+    currentMonth = 11;
+    currentYear--;
+  } else {
+    currentMonth--;
+  }
+  renderCalendar();
+}
+
+function nextMonth() {
+  if (currentMonth === 11) {
+    currentMonth = 0;
+    currentYear++;
+  } else {
+    currentMonth++;
+  }
+  renderCalendar();
+}
+
+function selectDateHandler(day, cellEl) {
+  document.querySelectorAll('.cal-cell').forEach(c => c.classList.remove('selected'));
+  cellEl.classList.add('selected');
+  selectedDate = { day, month: currentMonth, year: currentYear };
+  renderTimeSlots();
+}
+
+function renderTimeSlots() {
+  const container = document.getElementById('time-slots-container');
+  container.innerHTML = '';
+  
+  times.forEach(time => {
+    const slot = document.createElement('div');
+    slot.className = 'time-slot';
+    slot.textContent = time;
+    
+    // Simulate some times being booked/disabled randomly based on date
+    const seed = selectedDate ? (selectedDate.day + time.charCodeAt(0)) : 10;
+    const isBooked = (seed % 5 === 0);
+    
+    if (isBooked) {
+      slot.classList.add('disabled');
+    } else {
+      slot.onclick = () => selectTimeHandler(time, slot);
+      if (selectedTime === time) {
+        slot.classList.add('selected');
+      }
+    }
+    container.appendChild(slot);
+  });
+}
+
+function selectTimeHandler(time, slotEl) {
+  document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+  slotEl.classList.add('selected');
+  selectedTime = time;
+}
+
+function selectParty(num, el) {
+  document.querySelectorAll('.party-circle').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedGuests = num;
+}
+
+// ── STEP CONTROLLER ──────────────────────────────────────
+function nextStep(step) {
+  if (step === 2) {
+    if (!selectedDate) {
+      showToast("Please choose a date from the calendar grid.", "info");
+      return;
+    }
+    if (!selectedTime) {
+      showToast("Please choose a preferred time slot.", "info");
+      return;
+    }
+  }
+  if (step === 3) {
+    // No validations required for step 2 inputs
+  }
+  
+  // Update Indicators
+  document.querySelectorAll('.step-dot').forEach((dot, i) => {
+    dot.className = 'step-dot';
+    if (i < step - 1) dot.classList.add('completed');
+    if (i === step - 1) dot.classList.add('active');
+  });
+  
+  // Show Panel
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${step}`).classList.add('active');
+}
+
+function prevStep(step) {
+  document.querySelectorAll('.step-dot').forEach((dot, i) => {
+    dot.className = 'step-dot';
+    if (i < step - 1) dot.classList.add('completed');
+    if (i === step - 1) dot.classList.add('active');
+  });
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${step}`).classList.add('active');
+}
+
+// ── SUBMIT RESERVATION ───────────────────────────────────
+function submitReservation() {
+  const name = document.getElementById('guest-name').value;
+  const email = document.getElementById('guest-email').value;
+  const phone = document.getElementById('guest-phone').value;
+  
+  const loader = document.getElementById('booking-loader');
+  loader.style.display = 'flex';
+  
+  // Mock API Call latency
+  setTimeout(() => {
+    loader.style.display = 'none';
+    
+    // Store in localStorage for dashboard to pull
+    const list = JSON.parse(localStorage.getItem('reservations') || '[]');
+    const newBooking = {
+      id: '#RES-' + Math.floor(1000 + Math.random()*9000),
+      name, email, phone,
+      date: `${selectedDate.day} ${monthNames[selectedDate.month]} ${selectedDate.year}`,
+      time: selectedTime,
+      guests: selectedGuests,
+      table: document.getElementById('table-pref').value,
+      notes: document.getElementById('special-req').value
+    };
+    list.push(newBooking);
+    localStorage.setItem('reservations', JSON.stringify(list));
+    
+    // Switch Screen
+    document.getElementById('booking-container').style.display = 'none';
+    const success = document.getElementById('success-card');
+    success.style.display = 'flex';
+    
+    document.getElementById('success-msg').textContent = `Thank you. Your table has been reserved for ${newBooking.date} at ${newBooking.time} for ${newBooking.guests} guests. Direct confirmation email sent to ${newBooking.email}.`;
+    
+    startCountdown();
+  }, 2200);
+}
+
+// ── LIVE COUNTDOWN ────────────────────────────────────────
+function startCountdown() {
+  const cd = document.getElementById('countdown');
+  let sec = 5;
+  const inv = setInterval(() => {
+    sec--;
+    const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+    const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+    const s = String(sec % 60).padStart(2, '0');
+    cd.textContent = `${h}:${m}:${s}`;
+    
+    if (sec <= 0) {
+      clearInterval(inv);
+      cd.textContent = "Dinner Time 🥂";
+    }
+  }, 1000);
+}
+
+// Initialise
+renderCalendar();
+renderTimeSlots();
+</script>
+</body>
+</html>

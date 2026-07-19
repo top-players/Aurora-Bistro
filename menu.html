@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Menu — Aurora Bistro</title>
+<meta name="description" content="Explore Aurora Bistro's handcrafted seasonal menu — starters, mains, desserts, and wines curated by Chef Marco Ferreira."/>
+<link rel="stylesheet" href="css/aurora.css"/>
+<style>
+/* ── MENU PAGE ─────────────────────────────────────────── */
+body{background:var(--bg-deep);}
+.menu-hero{
+  min-height:38vh;padding-top:var(--nav-h);
+  display:flex;align-items:flex-end;padding-bottom:64px;
+  background:linear-gradient(180deg,var(--bg-void) 0%,var(--bg-dark) 100%);
+  position:relative;overflow:hidden;
+}
+.menu-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 100%,rgba(180,100,20,0.15),transparent);
+}
+.menu-hero-text{position:relative;z-index:1;padding:0 48px;}
+
+/* Category tabs */
+.cat-tabs{
+  display:flex;gap:0;border-radius:12px;overflow:hidden;
+  border:1px solid var(--border-gold);margin-bottom:48px;
+  background:var(--bg-card);
+}
+.cat-tab{
+  flex:1;padding:16px 8px;text-align:center;cursor:pointer;
+  font-size:13px;font-weight:600;letter-spacing:0.06em;
+  color:var(--text-dim);transition:all 0.3s var(--ease);
+  position:relative;
+}
+.cat-tab::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--gold-500),var(--gold-300));
+  transform:scaleX(0);transition:transform 0.3s var(--ease);
+}
+.cat-tab.active{background:rgba(212,168,72,0.1);color:var(--gold-300);}
+.cat-tab.active::after,.cat-tab:hover::after{transform:scaleX(1);}
+.cat-tab:hover{color:var(--text-warm);}
+.cat-icon{font-size:22px;display:block;margin-bottom:4px;}
+
+/* Dish Grid */
+.dish-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:24px;
+}
+.dish-card{
+  background:var(--bg-card);border:1px solid var(--border-warm);
+  border-radius:16px;overflow:hidden;cursor:pointer;
+  transition:transform 0.35s var(--ease),box-shadow 0.35s var(--ease),border-color 0.3s;
+  position:relative;
+}
+.dish-card:hover{
+  transform:perspective(800px) translateY(-8px) rotate3d(1,0.5,0,2deg);
+  box-shadow:var(--shadow-xl),var(--glow-soft);
+  border-color:var(--border-gold);
+}
+.dish-img{
+  width:100%;height:200px;position:relative;overflow:hidden;
+}
+.dish-img canvas{width:100%;height:100%;transition:transform 0.5s var(--ease);}
+.dish-card:hover .dish-img canvas{transform:scale(1.06);}
+.dish-img-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,0.7) 0%,transparent 55%);
+}
+.dish-tags{position:absolute;top:10px;left:10px;display:flex;gap:6px;flex-wrap:wrap;}
+.dish-heat{
+  position:absolute;top:10px;right:10px;
+  font-size:16px;
+  animation:heatGlow 1.5s ease-in-out infinite alternate;
+}
+@keyframes heatGlow{from{filter:drop-shadow(0 0 4px rgba(255,80,0,0.4))} to{filter:drop-shadow(0 0 10px rgba(255,80,0,0.9))}}
+.dish-body{padding:18px;}
+.dish-name{font-family:var(--font-serif);font-size:19px;font-weight:700;color:var(--text-bright);margin-bottom:6px;}
+.dish-desc{font-size:13px;color:var(--text-mid);line-height:1.6;margin-bottom:12px;}
+.dish-footer{display:flex;align-items:center;justify-content:space-between;}
+.dish-price{font-family:var(--font-serif);font-size:22px;font-weight:700;color:var(--gold-400);}
+.dish-price span{font-size:14px;font-weight:400;color:var(--text-muted);}
+.dish-stars{display:flex;gap:2px;}
+.dish-add{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold-500),var(--gold-300));
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:700;color:var(--bg-void);
+  transition:all 0.25s var(--ease-spring);
+  box-shadow:var(--shadow-sm);
+}
+.dish-add:hover{transform:scale(1.15) rotate(90deg);box-shadow:var(--shadow-md),var(--glow-gold);}
+
+/* Special featured dish */
+.dish-card.featured{
+  grid-column:span 2;
+  display:grid;grid-template-columns:1.2fr 0.8fr;
+}
+.dish-card.featured .dish-img{height:100%;min-height:220px;}
+@media(max-width:700px){.dish-card.featured{grid-column:span 1;display:block;}}
+
+/* Category panel */
+.cat-panel{display:none;}
+.cat-panel.active{display:block;animation:fadeUp 0.4s var(--ease);}
+
+/* Cart sidebar */
+#cart-sidebar{
+  position:fixed;right:-380px;top:var(--nav-h);bottom:0;width:360px;
+  background:var(--bg-card);border-left:1px solid var(--border-gold);
+  z-index:500;transition:right 0.4s var(--ease);overflow-y:auto;
+  display:flex;flex-direction:column;
+}
+#cart-sidebar.open{right:0;}
+.cart-header{
+  padding:20px 24px;border-bottom:1px solid var(--border-warm);
+  display:flex;align-items:center;gap:12px;flex-shrink:0;
+}
+.cart-title{font-family:var(--font-serif);font-size:20px;font-weight:700;color:var(--text-bright);}
+.cart-close{
+  margin-left:auto;width:32px;height:32px;border-radius:50%;
+  background:var(--bg-surface);border:1px solid var(--border-warm);
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  color:var(--text-dim);cursor:pointer;transition:all 0.2s;
+}
+.cart-close:hover{background:var(--bg-raised);color:var(--text-warm);}
+.cart-items{flex:1;padding:16px 24px;display:flex;flex-direction:column;gap:12px;}
+.cart-item{
+  display:flex;align-items:center;gap:12px;padding:12px;
+  background:var(--bg-surface);border-radius:10px;border:1px solid var(--border-warm);
+  animation:slideInRight 0.35s var(--ease-spring);
+}
+.cart-item-name{font-size:13px;font-weight:600;color:var(--text-warm);flex:1;}
+.cart-item-price{font-size:14px;font-weight:700;color:var(--gold-400);font-family:var(--font-serif);}
+.cart-qty{display:flex;align-items:center;gap:8px;}
+.cart-qty-btn{
+  width:24px;height:24px;border-radius:50%;
+  background:var(--bg-raised);border:1px solid var(--border-warm);
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+  color:var(--text-mid);cursor:pointer;transition:all 0.2s;
+}
+.cart-qty-btn:hover{background:var(--gold-700);color:var(--text-bright);}
+.cart-footer{
+  padding:20px 24px;border-top:1px solid var(--border-warm);flex-shrink:0;
+}
+.cart-total{display:flex;justify-content:space-between;margin-bottom:16px;}
+.cart-total-label{font-size:14px;color:var(--text-mid);}
+.cart-total-val{font-family:var(--font-serif);font-size:22px;font-weight:700;color:var(--gold-300);}
+
+/* Cart toggle */
+#cart-fab{
+  position:fixed;bottom:28px;right:28px;z-index:499;
+  width:60px;height:60px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold-500),var(--gold-300));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-lg),var(--glow-gold);font-size:24px;
+  cursor:pointer;transition:transform 0.3s var(--ease-spring);
+}
+#cart-fab:hover{transform:scale(1.1);}
+#cart-count{
+  position:absolute;top:-4px;right:-4px;
+  width:22px;height:22px;border-radius:50%;
+  background:var(--ember);color:#fff;font-size:11px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  animation:bounceIn 0.4s var(--ease-spring);
+  border:2px solid var(--bg-card);
+}
+
+/* Dish detail overlay */
+#dish-overlay{
+  position:fixed;inset:0;z-index:800;
+  background:rgba(5,3,2,0.85);backdrop-filter:blur(12px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity 0.35s;padding:24px;
+}
+#dish-overlay.open{opacity:1;pointer-events:all;}
+.overlay-card{
+  background:var(--bg-card);border:1px solid var(--border-gold);
+  border-radius:20px;max-width:800px;width:100%;max-height:90vh;
+  overflow-y:auto;animation:scaleIn 0.4s var(--ease-spring);
+  display:grid;grid-template-columns:1.1fr 0.9fr;
+}
+.overlay-img{position:relative;min-height:340px;}
+.overlay-img canvas{width:100%;height:100%;display:block;}
+.overlay-body{padding:32px 28px;display:flex;flex-direction:column;gap:16px;}
+.overlay-name{font-family:var(--font-serif);font-size:26px;font-weight:700;color:var(--text-bright);}
+.overlay-price{font-family:var(--font-serif);font-size:28px;font-weight:700;color:var(--gold-400);}
+.overlay-section-title{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);}
+.ingredient-list{display:flex;flex-wrap:wrap;gap:6px;}
+.overlay-chef{font-size:14px;color:var(--text-mid);line-height:1.7;font-style:italic;border-left:2px solid var(--border-gold);padding-left:14px;}
+.allergen-list{display:flex;gap:8px;flex-wrap:wrap;}
+.allergen{padding:3px 10px;border-radius:20px;font-size:11px;background:rgba(200,60,20,0.12);color:#e07050;border:1px solid rgba(200,60,20,0.2);}
+.overlay-close{
+  position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:50%;
+  background:rgba(0,0,0,0.5);border:1px solid var(--border-warm);
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  color:var(--text-mid);cursor:pointer;z-index:10;transition:all 0.2s;
+}
+.overlay-close:hover{background:var(--bg-raised);color:var(--text-warm);}
+@media(max-width:700px){.overlay-card{grid-template-columns:1fr;}.overlay-img{min-height:220px;}}
+</style>
+</head>
+<body>
+<nav id="aurora-nav">
+  <a href="index.html" class="nav-logo">Aurora <span>Bistro</span></a>
+  <div class="nav-links">
+    <a href="index.html"        class="nav-link">Home</a>
+    <a href="menu.html"         class="nav-link active">Menu</a>
+    <a href="reservations.html" class="nav-link">Reservations</a>
+    <a href="kitchen.html"      class="nav-link">Our Story</a>
+    <a href="reviews.html"      class="nav-link">Reviews</a>
+    <a href="admin.html"        class="nav-link">Admin</a>
+  </div>
+  <a href="reservations.html" class="nav-cta btn-liquid">Reserve a Table</a>
+</nav>
+
+<!-- HERO -->
+<div class="menu-hero">
+  <div class="menu-hero-text">
+    <div class="section-label">Seasonal Menu</div>
+    <h1 class="section-title" style="font-size:clamp(40px,6vw,72px);">Handcrafted <em>Flavors</em></h1>
+    <p class="section-sub">Chef Marco Ferreira presents a seasonal carte blanche — each dish a conversation between land, sea, and fire.</p>
+  </div>
+</div>
+
+<!-- MENU CONTENT -->
+<section style="padding:64px 0 100px;background:var(--bg-dark);">
+  <div class="container">
+    <!-- Category Tabs -->
+    <div class="cat-tabs" id="cat-tabs">
+      <div class="cat-tab active" onclick="switchCat('starters',this)"><span class="cat-icon">🥗</span>Starters</div>
+      <div class="cat-tab" onclick="switchCat('mains',this)"><span class="cat-icon">🍽</span>Mains</div>
+      <div class="cat-tab" onclick="switchCat('desserts',this)"><span class="cat-icon">🍮</span>Desserts</div>
+      <div class="cat-tab" onclick="switchCat('drinks',this)"><span class="cat-icon">🍷</span>Drinks</div>
+    </div>
+
+    <!-- Starters -->
+    <div class="cat-panel active" id="panel-starters">
+      <div class="dish-grid" id="grid-starters"></div>
+    </div>
+    <!-- Mains -->
+    <div class="cat-panel" id="panel-mains">
+      <div class="dish-grid" id="grid-mains"></div>
+    </div>
+    <!-- Desserts -->
+    <div class="cat-panel" id="panel-desserts">
+      <div class="dish-grid" id="grid-desserts"></div>
+    </div>
+    <!-- Drinks -->
+    <div class="cat-panel" id="panel-drinks">
+      <div class="dish-grid" id="grid-drinks"></div>
+    </div>
+  </div>
+</section>
+
+<!-- CART SIDEBAR -->
+<div id="cart-sidebar">
+  <div class="cart-header">
+    <span style="font-size:22px">🛒</span>
+    <div class="cart-title">Your Order</div>
+    <div class="cart-close" onclick="toggleCart()">✕</div>
+  </div>
+  <div class="cart-items" id="cart-items">
+    <div style="text-align:center;color:var(--text-muted);padding:40px 0;font-size:14px;">
+      <div style="font-size:40px;margin-bottom:12px;">🍽</div>
+      Your order is empty.<br>Add dishes to get started.
+    </div>
+  </div>
+  <div class="cart-footer">
+    <div class="cart-total">
+      <span class="cart-total-label">Total</span>
+      <span class="cart-total-val" id="cart-total">$0.00</span>
+    </div>
+    <button class="btn btn-primary btn-liquid" style="width:100%;justify-content:center;" onclick="placeOrder()">Place Order</button>
+  </div>
+</div>
+<div id="cart-fab" onclick="toggleCart()">
+  🛒<div id="cart-count" style="display:none">0</div>
+</div>
+
+<!-- DISH OVERLAY -->
+<div id="dish-overlay" onclick="closeOverlay(event)">
+  <div class="overlay-card" id="overlay-card">
+    <div class="overlay-img" id="overlay-img">
+      <div class="overlay-close" onclick="document.getElementById('dish-overlay').classList.remove('open')">✕</div>
+      <img id="overlay-img-element" style="width:100%; height:100%; object-fit:cover; display:block;" alt="Dish Details"/>
+    </div>
+    <div class="overlay-body" id="overlay-body"></div>
+  </div>
+</div>
+
+<script src="js/aurora.js"></script>
+<script>
+const TAU=Math.PI*2,rnd=(a,b)=>a+Math.random()*(b-a);
+
+// ── MENU DATA ────────────────────────────────────────────
+const menu = {
+  starters:[
+    {name:'Burrata Bruschetta',desc:'Wood-fired sourdough, whipped burrata, heirloom tomatoes, aged balsamic reduction.',price:18,rating:4.7,tags:['vegan'],heat:false,color:'#c87030',featured:false,chef:'A delicate dance of smoke and cream.',ingredients:['Burrata','Sourdough','Heirloom Tomato','Balsamic'],allergens:['Gluten','Dairy']},
+    {name:'Tuna Tataki',desc:'Seared yellowfin tuna, ponzu gel, micro radish, sesame ash.',price:24,rating:4.9,tags:['chef'],heat:true,color:'#c03020',featured:true,chef:'Inspired by Tokyo\'s Tsukiji market.',ingredients:['Yellowfin Tuna','Ponzu','Sesame','Radish'],allergens:['Fish','Soy']},
+    {name:'Wild Mushroom Velouté',desc:'Porcini, shiitake, chanterelle cream, truffle oil, crispy shallots.',price:16,rating:4.6,tags:['vegan'],heat:false,color:'#806040',featured:false,chef:'Earthy, comforting, and deeply satisfying.',ingredients:['Porcini','Shiitake','Chanterelle','Truffle Oil'],allergens:['Dairy']},
+    {name:'Burrata & Beetroot',desc:'Golden and red beetroot, whipped labneh, pistachio crumble, pomegranate.',price:17,rating:4.5,tags:['vegan'],heat:false,color:'#902050',featured:false,chef:'A riot of colour and texture.',ingredients:['Beetroot','Labneh','Pistachio','Pomegranate'],allergens:['Dairy','Nuts']},
+    {name:'Lobster Bisque',desc:'Atlantic lobster, cognac cream, tarragon oil, paprika dust.',price:28,rating:4.8,tags:['chef'],heat:true,color:'#c05020',featured:false,chef:'Decadent and rich — our most celebrated starter.',ingredients:['Lobster','Cognac','Tarragon','Paprika'],allergens:['Shellfish','Dairy','Alcohol']},
+  ],
+  mains:[
+    {name:'Saffron Risotto & Black Truffle',desc:'Carnaroli rice, La Mancha saffron, Périgord black truffle, aged Parmigiano.',price:42,rating:4.9,tags:['chef','vegan'],heat:false,color:'#d4a030',featured:true,chef:'Our signature dish. A study in restraint and luxury.',ingredients:['Carnaroli Rice','Saffron','Black Truffle','Parmigiano'],allergens:['Dairy']},
+    {name:'Wagyu Striploin',desc:'A5 Wagyu, truffle jus, pommes anna, roasted bone marrow, watercress.',price:68,rating:4.9,tags:['chef'],heat:false,color:'#803020',featured:false,chef:'Perfection on a plate. Served medium rare.',ingredients:['A5 Wagyu','Truffle','Bone Marrow','Potato'],allergens:['Dairy']},
+    {name:'Pan-Seared Seabass',desc:'Mediterranean seabass, saffron beurre blanc, fennel confit, sea grapes.',price:38,rating:4.7,tags:[],heat:false,color:'#2060a0',featured:false,chef:'As fresh as the tide itself.',ingredients:['Seabass','Saffron','Fennel','Sea Grapes'],allergens:['Fish','Dairy']},
+    {name:'Confit Duck Leg',desc:'48hr duck confit, cherry gastrique, celeriac purée, pickled blackberries.',price:36,rating:4.6,tags:[],heat:false,color:'#804020',featured:false,chef:'A French classic reimagined for a modern palate.',ingredients:['Duck Leg','Cherry','Celeriac','Blackberries'],allergens:['None']},
+    {name:'Roasted Cauliflower',desc:'Whole roasted cauliflower, miso glaze, hazelnut butter, pickled shallots.',price:28,rating:4.5,tags:['vegan'],heat:false,color:'#d0b050',featured:false,chef:'The dish that turned vegetarians into converts.',ingredients:['Cauliflower','Miso','Hazelnut','Shallot'],allergens:['Nuts','Soy']},
+  ],
+  desserts:[
+    {name:'Valrhona Fondant',desc:'Dark chocolate fondant 70%, liquid caramel core, vanilla bean ice cream.',price:16,rating:4.9,tags:['chef'],heat:false,color:'#401808',featured:false,chef:'The one dessert you cannot skip.',ingredients:['Valrhona 70%','Caramel','Vanilla','Cream'],allergens:['Gluten','Dairy','Eggs']},
+    {name:'Crème Brûlée',desc:'Classic Tahitian vanilla custard, caramelised crust, seasonal berries.',price:13,rating:4.7,tags:[],heat:false,color:'#d0a050',featured:false,chef:'Simple perfection.',ingredients:['Vanilla','Cream','Egg Yolk','Sugar'],allergens:['Dairy','Eggs']},
+    {name:'Aurora Pavlova',desc:'Rose meringue, mascarpone cream, lychee, raspberry coulis, edible gold.',price:15,rating:4.8,tags:['chef'],heat:false,color:'#d08090',featured:true,chef:'Our showstopper dessert, inspired by the northern lights.',ingredients:['Meringue','Mascarpone','Lychee','Raspberry'],allergens:['Dairy','Eggs']},
+    {name:'Mango Sorbet',desc:'Alphonso mango sorbet, coconut tuile, passion fruit gel, micro mint.',price:11,rating:4.6,tags:['vegan'],heat:false,color:'#e0a020',featured:false,chef:'A palate cleanser that steals the show.',ingredients:['Alphonso Mango','Coconut','Passion Fruit','Mint'],allergens:['None']},
+  ],
+  drinks:[
+    {name:'Aurora Spritz',desc:'Aperol, Prosecco, elderflower syrup, rosemary, grapefruit peel.',price:14,rating:4.8,tags:['chef'],heat:false,color:'#e06020',featured:false,chef:'Our signature welcome drink.',ingredients:['Aperol','Prosecco','Elderflower','Grapefruit'],allergens:['Alcohol','Sulphites']},
+    {name:'Burgundy Pinot Noir',desc:'Domaine Leroy, Gevrey-Chambertin 1er Cru, 2018. Silky, complex, exceptional.',price:28,rating:4.9,tags:[],heat:false,color:'#600820',featured:false,chef:'The finest Burgundy we could source.',ingredients:['Pinot Noir','Burgundy 2018'],allergens:['Alcohol','Sulphites']},
+    {name:'Truffle Negroni',desc:'Aged gin, Campari, truffle-infused vermouth, orange, activated charcoal ice.',price:18,rating:4.8,tags:['chef'],heat:false,color:'#402010',featured:true,chef:'Our bartender\'s masterpiece.',ingredients:['Gin','Campari','Vermouth','Truffle'],allergens:['Alcohol']},
+    {name:'Yuzu Mocktail',desc:'Yuzu juice, ginger beer, shiso syrup, lime foam, dehydrated citrus wheel.',price:12,rating:4.6,tags:['vegan'],heat:false,color:'#c0d020',featured:false,chef:'The non-alcoholic star of the menu.',ingredients:['Yuzu','Ginger Beer','Shiso','Lime'],allergens:['None']},
+  ]
+};
+
+// ── CART STATE ───────────────────────────────────────────
+let cart=[], canvases={};
+
+function cartTotal(){return cart.reduce((s,i)=>s+i.price*i.qty,0);}
+function cartCount(){return cart.reduce((s,i)=>s+i.qty,0);}
+
+function updateCartUI(){
+  const cnt=cartCount();
+  const badge=document.getElementById('cart-count');
+  badge.style.display=cnt>0?'flex':'none';
+  badge.textContent=cnt;
+  document.getElementById('cart-total').textContent='$'+cartTotal().toFixed(2);
+  const items=document.getElementById('cart-items');
+  if(cart.length===0){
+    items.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:40px 0;font-size:14px;"><div style="font-size:40px;margin-bottom:12px;">🍽</div>Your order is empty.<br>Add dishes to get started.</div>';
+    return;
+  }
+  items.innerHTML='';
+  cart.forEach((item,i)=>{
+    const el=document.createElement('div');
+    el.className='cart-item';
+    el.innerHTML=`<div class="cart-item-name">${item.name}</div>
+      <div class="cart-qty">
+        <div class="cart-qty-btn" onclick="changeQty(${i},-1)">−</div>
+        <span style="font-size:13px;color:var(--text-warm);min-width:20px;text-align:center">${item.qty}</span>
+        <div class="cart-qty-btn" onclick="changeQty(${i},1)">+</div>
+      </div>
+      <div class="cart-item-price">$${(item.price*item.qty).toFixed(2)}</div>`;
+    items.appendChild(el);
+  });
+}
+
+function addToCart(dish){
+  const existing=cart.find(i=>i.name===dish.name);
+  if(existing){existing.qty++;} else {cart.push({...dish,qty:1});}
+  updateCartUI();
+  if(!document.getElementById('cart-sidebar').classList.contains('open')) toggleCart();
+  showToast(`${dish.name} added to order 🍽`,'success');
+}
+function changeQty(i,delta){
+  cart[i].qty+=delta;
+  if(cart[i].qty<=0) cart.splice(i,1);
+  updateCartUI();
+}
+function toggleCart(){document.getElementById('cart-sidebar').classList.toggle('open');}
+function placeOrder(){
+  if(cart.length===0){showToast('Your order is empty!','error');return;}
+  cart=[];updateCartUI();toggleCart();
+  showToast('Order placed! Chef has been notified. 🥂','success');
+}
+
+// ── DISH CARD MAPPING ────────────────────────────────────
+function getDishImage(dish) {
+  const name = dish.name.toLowerCase();
+  
+  // Starters
+  if (name.includes('bruschetta')) return 'https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&w=800&q=80';
+  if (name.includes('tataki')) return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80';
+  if (name.includes('velouté') || name.includes('veloute')) return 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80';
+  if (name.includes('beetroot')) return 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80';
+  if (name.includes('bisque') || name.includes('lobster')) return 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=800&q=80';
+
+  // Mains
+  if (name.includes('risotto')) return 'https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?auto=format&fit=crop&w=800&q=80';
+  if (name.includes('wagyu') || name.includes('striploin')) return 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80';
+  if (name.includes('seabass') || name.includes('bass')) return 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=800&q=80';
+  if (name.includes('duck') || name.includes('confit')) return 'https://images.unsplash.com/photo-1514944288352-fffac99f0bdf?auto=format&fit=crop&w=800&q=80';
+  if (name.includes('cauliflower')) return 'https://images.unsplash.com/photo-1624462966581-bc6d768cbce5?auto=format&fit=crop&w=800&q=80';
+
+  // Desserts
+  if (name.includes('fondant')) return 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80';
+  if (name.includes('brûlée') || name.includes('brulee')) return 'https://images.unsplash.com/photo-1516685018646-549198525c1b?auto=format&fit=crop&w=800&q=80';
+  if (name.includes('pavlova')) return 'https://images.unsplash.com/photo-1511018556340-d16986a1c194?auto=format&fit=crop&w=800&q=80';
+  if (name.includes('sorbet') || name.includes('mango')) return 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=800&q=80';
+
+  // Drinks
+  if (name.includes('spritz')) return 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=800&q=80';
+  if (name.includes('pinot') || name.includes('wine') || name.includes('burgundy')) return 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=800&q=80';
+  if (name.includes('negroni')) return 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=800&q=80';
+  if (name.includes('yuzu') || name.includes('mocktail')) return 'https://images.unsplash.com/photo-1536935338788-846bb9981813?auto=format&fit=crop&w=800&q=80';
+
+  return 'images/dining_room.png';
+}
+
+function buildGrid(containerId,dishes){
+  const grid=document.getElementById(containerId);
+  if(!grid) return;
+  dishes.forEach((dish,i)=>{
+    const card=document.createElement('div');
+    card.className='dish-card'+(dish.featured?' featured':'');
+    const canvasId=`dc-${containerId}-${i}`;
+    const tagHtml=dish.tags.map(t=>`<span class="tag tag-${t}">${t==='chef'?'⭐ Chef\'s Special':t==='vegan'?'🌱 Vegan':'🌶 Spicy'}</span>`).join('');
+    
+    // Set category context
+    dish.category = containerId.replace('grid-', '');
+
+    card.innerHTML=`
+      <div class="dish-img">
+        <img src="${getDishImage(dish)}" alt="${dish.name}" style="width:100%; height:100%; object-fit:cover; transition:transform 0.5s var(--ease);"/>
+        <div class="dish-img-overlay"></div>
+        <div class="dish-tags">${tagHtml}</div>
+        ${dish.heat?'<div class="dish-heat">🌶</div>':''}
+      </div>
+      <div class="dish-body">
+        <div class="dish-name">${dish.name}</div>
+        <div class="dish-desc">${dish.desc}</div>
+        <div class="dish-footer">
+          <div>
+            <div class="dish-price">$${dish.price}<span> / serving</span></div>
+            <div class="dish-stars" id="stars-${canvasId}"></div>
+          </div>
+          <div class="dish-add" onclick="event.stopPropagation();addToCart(${JSON.stringify(dish).replace(/"/g,'&quot;')})">+</div>
+        </div>
+      </div>`;
+    card.addEventListener('click',()=>openOverlay(dish));
+    grid.appendChild(card);
+    
+    // Stars
+    setTimeout(()=>{
+      const sc=document.getElementById(`stars-${canvasId}`);
+      if(sc&&window.renderStars) renderStars(sc,dish.rating);
+    },100);
+  });
+}
+
+// ── OVERLAY ──────────────────────────────────────────────
+function openOverlay(dish){
+  const overlay=document.getElementById('dish-overlay');
+  const body=document.getElementById('overlay-body');
+  const imgEl=document.getElementById('overlay-img-element');
+  overlay.classList.add('open');
+  
+  imgEl.src = getDishImage(dish);
+  
+  const tagHtml=dish.tags.map(t=>`<span class="tag tag-${t}">${t==='chef'?'⭐ Chef\'s Special':t==='vegan'?'🌱 Vegan':'🌶 Spicy'}</span>`).join('');
+  body.innerHTML=`
+    <div><div style="font-size:22px;margin-bottom:6px">${dish.heat?'🌶 ':''}${dish.name}</div><div class="overlay-price">$${dish.price}</div></div>
+    <div>${tagHtml}</div>
+    <div class="stars" id="overlay-stars"></div>
+    <p style="font-size:14px;color:var(--text-mid);line-height:1.7">${dish.desc}</p>
+    <div><div class="overlay-section-title" style="margin-bottom:8px">Ingredients</div><div class="ingredient-list">${dish.ingredients.map(i=>`<span class="ingredient">${i}</span>`).join('')}</div></div>
+    <div><div class="overlay-section-title" style="margin-bottom:8px">Chef's Notes</div><div class="overlay-chef">${dish.chef}</div></div>
+    <div><div class="overlay-section-title" style="margin-bottom:8px">Allergens</div><div class="allergen-list">${(dish.allergens||[]).map(a=>`<span class="allergen">${a}</span>`).join('')}</div></div>
+    <div style="display:flex;gap:12px;margin-top:auto">
+      <button class="btn btn-primary btn-liquid" style="flex:1;justify-content:center" onclick="addToCart(${JSON.stringify(dish).replace(/'/g,'&#39;').replace(/"/g,'&quot;')})">Add to Order</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('dish-overlay').classList.remove('open')">Close</button>
+    </div>`;
+  if(window.renderStars) renderStars(document.getElementById('overlay-stars'),dish.rating);
+}
+function closeOverlay(e){
+  if(e.target===document.getElementById('dish-overlay')) document.getElementById('dish-overlay').classList.remove('open');
+}
+
+// ── CATEGORY SWITCH ──────────────────────────────────────
+function switchCat(cat,tabEl){
+  document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.cat-panel').forEach(p=>p.classList.remove('active'));
+  tabEl.classList.add('active');
+  document.getElementById('panel-'+cat).classList.add('active');
+}
+
+// ── INIT ─────────────────────────────────────────────────
+Object.entries(menu).forEach(([cat,dishes])=>buildGrid(`grid-${cat}`,dishes));
+</script>
+</body>
+</html>

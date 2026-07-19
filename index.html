@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Aurora Bistro — Experience Handcrafted Flavors</title>
+<meta name="description" content="Aurora Bistro — A modern upscale dining experience with handcrafted flavors and a warm, cinematic atmosphere."/>
+<link rel="stylesheet" href="css/aurora.css"/>
+<style>
+/* ── HERO ─────────────────────────────────────────────── */
+#hero{
+  position:relative;width:100%;height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+#bokeh-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;}
+.hero-scene{position:absolute;inset:0;z-index:1;}
+
+/* Table Scene Layers */
+.scene-layer{position:absolute;will-change:transform;transition:transform 0.08s ease-out;}
+#scene-bg{
+  inset:0;
+  background:radial-gradient(ellipse 120% 80% at 50% 110%,#1a0e06 0%,#0a0604 60%,#05030200 100%);
+}
+#scene-glow{
+  bottom:0;left:0;right:0;height:55%;
+  background:radial-gradient(ellipse 70% 60% at 50% 100%, rgba(180,100,20,0.18) 0%, transparent 70%);
+}
+
+/* Table canvas */
+#table-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;}
+
+/* Steam */
+.steam-wrap{position:absolute;bottom:28%;left:50%;transform:translateX(-50%);z-index:3;width:120px;height:120px;}
+.steam-strand{
+  position:absolute;bottom:0;width:12px;border-radius:50%;
+  filter:blur(4px);opacity:0;
+  animation:steam 3s ease-in-out infinite;
+  background:radial-gradient(ellipse,rgba(255,240,200,0.7),transparent);
+}
+.steam-strand:nth-child(1){left:20px;animation-delay:0s;width:10px;}
+.steam-strand:nth-child(2){left:50%;transform:translateX(-50%);animation-delay:0.7s;width:14px;}
+.steam-strand:nth-child(3){right:20px;animation-delay:1.4s;width:10px;}
+
+/* Bokeh lights floating */
+.bokeh-float{
+  position:absolute;border-radius:50%;pointer-events:none;z-index:2;
+  filter:blur(2px);animation:float var(--dur,5s) ease-in-out infinite;animation-delay:var(--del,0s);
+}
+
+/* Hero content */
+.hero-content{
+  position:relative;z-index:10;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:24px;
+  padding:0 24px;
+}
+.hero-tagline-wrap{
+  position:relative;height:60px;display:flex;align-items:center;justify-content:center;
+}
+.hero-tagline-svg{width:420px;max-width:90vw;overflow:visible;}
+.hero-tagline-path{
+  fill:none;stroke:var(--gold-300);stroke-width:1.5;
+  stroke-dasharray:1;stroke-dashoffset:1;
+  animation:drawPath 2.5s var(--ease-cinema) 1.2s forwards;
+}
+
+/* Logo animation */
+.hero-logo{
+  font-family:var(--font-serif);font-size:clamp(52px,8vw,92px);font-weight:900;
+  color:var(--gold-300);letter-spacing:-0.01em;
+  opacity:0;animation:fadeUp 1s var(--ease) 0.2s forwards;
+  text-shadow:0 0 60px rgba(212,168,72,0.4),0 0 120px rgba(212,168,72,0.15);
+  line-height:1;
+}
+.hero-logo span{font-style:italic;color:var(--gold-200);}
+.hero-logo .sub{
+  display:block;font-size:0.3em;letter-spacing:0.5em;font-weight:400;
+  color:var(--text-mid);font-family:var(--font-sans);text-transform:uppercase;
+  margin-top:8px;text-shadow:none;
+}
+
+/* Tagline text */
+.hero-tag{
+  font-family:var(--font-script);font-size:clamp(22px,3vw,34px);
+  color:var(--gold-200);opacity:0;
+  animation:fadeIn 1s var(--ease) 2.8s forwards;
+  letter-spacing:0.02em;
+}
+
+/* Buttons */
+.hero-btns{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;
+  opacity:0;animation:fadeUp 0.8s var(--ease) 3.3s forwards;}
+.hero-scroll{
+  position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
+  z-index:10;display:flex;flex-direction:column;align-items:center;gap:8px;
+  color:var(--text-dim);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;
+  animation:fadeIn 1s 4s forwards;opacity:0;
+}
+.scroll-line{
+  width:1px;height:48px;background:linear-gradient(to bottom,transparent,var(--gold-600));
+  animation:growH 1.5s var(--ease) 4.2s forwards;height:0;
+}
+
+/* ── FLOATING STATS ──────────────────────────────────── */
+.hero-stat{
+  position:absolute;z-index:8;padding:14px 20px;
+  animation:fadeIn 1s ease forwards;opacity:0;
+}
+#stat1{top:30%;left:5%;animation-delay:3.5s;transform:rotate(-2deg);}
+#stat2{top:25%;right:5%;animation-delay:3.7s;transform:rotate(1.5deg);}
+.stat-num{
+  font-family:var(--font-serif);font-size:36px;font-weight:700;color:var(--gold-300);
+  line-height:1;text-shadow:var(--glow-gold);
+}
+.stat-lbl{font-size:11px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-top:4px;}
+
+/* ── SECTIONS ────────────────────────────────────────── */
+#features{padding:100px 0;background:var(--bg-dark);}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:64px;}
+.feature-card{
+  padding:40px 32px;border-radius:16px;cursor:pointer;
+  background:var(--bg-card);border:1px solid var(--border-warm);
+  transition:all 0.4s var(--ease);position:relative;overflow:hidden;
+}
+.feature-card::before{
+  content:'';position:absolute;inset:0;opacity:0;
+  background:linear-gradient(135deg,rgba(212,168,72,0.08),transparent 60%);
+  transition:opacity 0.4s;
+}
+.feature-card:hover{transform:translateY(-8px);border-color:var(--border-gold);box-shadow:var(--shadow-xl),var(--glow-soft);}
+.feature-card:hover::before{opacity:1;}
+.feature-icon{font-size:40px;margin-bottom:20px;display:block;}
+.feature-title{font-family:var(--font-serif);font-size:24px;font-weight:700;color:var(--text-bright);margin-bottom:12px;}
+.feature-desc{font-size:14px;color:var(--text-mid);line-height:1.7;}
+.feature-link{
+  display:inline-flex;align-items:center;gap:6px;margin-top:20px;
+  font-size:13px;font-weight:600;color:var(--gold-400);letter-spacing:0.04em;
+  transition:gap 0.2s;
+}
+.feature-link:hover{gap:10px;}
+
+/* ── SIGNATURE DISH ──────────────────────────────────── */
+#signature{
+  padding:120px 0;
+  background:linear-gradient(180deg,var(--bg-dark) 0%,var(--bg-void) 100%);
+  position:relative;overflow:hidden;
+}
+.sig-inner{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;}
+.sig-visual{position:relative;height:480px;}
+#dish-canvas{width:100%;height:100%;border-radius:20px;box-shadow:var(--shadow-xl);}
+.sig-badge{
+  position:absolute;bottom:-20px;right:-20px;
+  width:100px;height:100px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold-500),var(--gold-300));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-lg),var(--glow-gold);
+  animation:float 4s ease-in-out infinite;
+}
+.sig-badge-num{font-family:var(--font-serif);font-size:24px;font-weight:900;color:var(--bg-void);}
+.sig-badge-lbl{font-size:8px;font-weight:700;color:var(--bg-dark);letter-spacing:0.08em;text-transform:uppercase;}
+.sig-text{padding:20px 0;}
+.sig-subtitle{font-family:var(--font-script);font-size:20px;color:var(--gold-400);margin-bottom:8px;}
+.sig-title{font-family:var(--font-serif);font-size:clamp(32px,3.5vw,48px);font-weight:700;color:var(--text-bright);margin-bottom:20px;line-height:1.15;}
+.sig-title em{font-style:italic;color:var(--gold-300);}
+.sig-desc{font-size:15px;color:var(--text-mid);line-height:1.8;margin-bottom:32px;}
+.sig-ingredients{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px;}
+.ingredient{
+  padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;
+  background:var(--bg-surface);border:1px solid var(--border-warm);color:var(--text-mid);
+}
+
+/* ── ATMOSPHERE ──────────────────────────────────────── */
+#atmosphere{
+  padding:100px 0;background:var(--bg-deep);
+}
+.atmo-grid{display:grid;grid-template-columns:1.2fr 0.8fr 1fr;grid-template-rows:200px 200px;gap:12px;margin-top:64px;}
+.atmo-cell{border-radius:12px;overflow:hidden;position:relative;cursor:pointer;}
+.atmo-cell.tall{grid-row:span 2;}
+.atmo-cell canvas{width:100%;height:100%;display:block;transition:transform 0.5s var(--ease);}
+.atmo-cell:hover canvas{transform:scale(1.04);}
+.atmo-overlay{
+  position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.7) 0%,transparent 50%);
+  display:flex;align-items:flex-end;padding:16px;
+}
+.atmo-label{font-family:var(--font-serif);font-size:15px;color:var(--gold-200);}
+
+/* ── NEWSLETTER ──────────────────────────────────────── */
+#newsletter{
+  padding:80px 0;
+  background:linear-gradient(135deg,var(--bg-card),var(--bg-surface));
+  border-top:1px solid var(--border-gold);border-bottom:1px solid var(--border-gold);
+}
+.nl-inner{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;}
+.nl-form{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border-gold);}
+.nl-input{
+  flex:1;padding:14px 20px;background:rgba(14,10,6,0.6);border:none;outline:none;
+  font-size:14px;color:var(--text-warm);font-family:var(--font-sans);
+}
+.nl-input::placeholder{color:var(--text-muted);}
+.nl-btn{
+  padding:14px 28px;background:linear-gradient(135deg,var(--gold-500),var(--gold-300));
+  color:var(--bg-void);font-size:13px;font-weight:700;letter-spacing:0.06em;white-space:nowrap;
+  transition:filter 0.2s;
+}
+.nl-btn:hover{filter:brightness(1.1);}
+
+/* ── FOOTER ──────────────────────────────────────────── */
+#footer{
+  padding:60px 0 32px;
+  background:var(--bg-void);border-top:1px solid var(--border-warm);
+}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px;}
+.footer-brand{font-family:var(--font-serif);font-size:20px;font-weight:700;color:var(--gold-300);margin-bottom:14px;}
+.footer-desc{font-size:13px;color:var(--text-dim);line-height:1.8;}
+.footer-heading{font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:10px;}
+.footer-links a{font-size:13px;color:var(--text-dim);transition:color 0.2s;}
+.footer-links a:hover{color:var(--gold-400);}
+.footer-bottom{
+  border-top:1px solid var(--border-warm);padding-top:24px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;color:var(--text-muted);
+}
+
+@media(max-width:900px){
+  .features-grid,.sig-inner,.nl-inner,.footer-grid{grid-template-columns:1fr;}
+  .sig-visual{height:320px;}
+  .atmo-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto;}
+  .atmo-cell.tall{grid-row:span 1;}
+  #stat1,#stat2{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav id="aurora-nav">
+  <a href="index.html" class="nav-logo">Aurora <span>Bistro</span></a>
+  <div class="nav-links">
+    <a href="index.html"        class="nav-link">Home</a>
+    <a href="menu.html"         class="nav-link">Menu</a>
+    <a href="reservations.html" class="nav-link">Reservations</a>
+    <a href="kitchen.html"      class="nav-link">Our Story</a>
+    <a href="reviews.html"      class="nav-link">Reviews</a>
+    <a href="admin.html"        class="nav-link">Admin</a>
+  </div>
+  <a href="reservations.html" class="nav-cta btn-liquid">Reserve a Table</a>
+  <div class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="bokeh-canvas"></canvas>
+  <canvas id="table-canvas"></canvas>
+
+  <!-- Steam -->
+  <div class="steam-wrap" id="steam-wrap">
+    <div class="steam-strand"></div>
+    <div class="steam-strand"></div>
+    <div class="steam-strand"></div>
+  </div>
+
+  <!-- Floating bokeh orbs -->
+  <div class="bokeh-float glass" style="--dur:6s;--del:0s;width:8px;height:8px;top:30%;left:15%;background:rgba(212,168,72,0.6);box-shadow:0 0 20px rgba(212,168,72,0.8);"></div>
+  <div class="bokeh-float" style="--dur:8s;--del:1s;width:14px;height:14px;top:50%;left:8%;background:rgba(180,100,20,0.5);border-radius:50%;filter:blur(3px);box-shadow:0 0 30px rgba(180,100,20,0.7);"></div>
+  <div class="bokeh-float" style="--dur:7s;--del:2s;width:6px;height:6px;top:20%;right:12%;background:rgba(240,180,80,0.7);border-radius:50%;box-shadow:0 0 16px rgba(240,180,80,0.8);"></div>
+  <div class="bokeh-float" style="--dur:9s;--del:0.5s;width:20px;height:20px;top:65%;right:18%;background:rgba(200,120,40,0.4);border-radius:50%;filter:blur(5px);"></div>
+  <div class="bokeh-float" style="--dur:5s;--del:1.8s;width:10px;height:10px;top:40%;right:25%;background:rgba(220,160,60,0.6);border-radius:50%;box-shadow:0 0 24px rgba(220,160,60,0.7);"></div>
+
+  <!-- Floating stats -->
+  <div class="hero-stat glass" id="stat1">
+    <div class="stat-num">12+</div>
+    <div class="stat-lbl">Years of Excellence</div>
+  </div>
+  <div class="hero-stat glass" id="stat2">
+    <div class="stat-num">4.9★</div>
+    <div class="stat-lbl">Guest Rating</div>
+  </div>
+
+  <!-- Content -->
+  <div class="hero-content">
+    <div class="hero-logo">Aurora <span>Bistro</span><span class="sub">Est. 2012 · Fine Dining</span></div>
+
+    <!-- Handwriting SVG tagline -->
+    <div class="hero-tagline-wrap">
+      <svg class="hero-tagline-svg" viewBox="0 0 420 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path class="hero-tagline-path" d="M12,38 C20,20 34,14 46,22 C56,28 58,42 68,38 C78,34 80,18 94,16 C106,14 110,30 120,32 C132,34 136,20 148,20 C158,20 162,34 172,36 C184,38 190,22 202,20 C214,18 218,34 230,36 C242,38 246,22 258,22 C270,22 274,38 286,36 C298,34 304,20 318,22 C330,24 336,40 348,38 C358,36 366,22 378,24 C390,26 398,40 410,38"/>
+        <text x="50%" y="42" text-anchor="middle" font-family="Dancing Script, cursive" font-size="28" fill="rgba(240,208,96,0.92)" opacity="0" style="animation:fadeIn 0.6s ease 3.6s forwards">Experience handcrafted flavors.</text>
+      </svg>
+    </div>
+
+    <div class="hero-btns">
+      <a href="menu.html" class="btn btn-primary btn-liquid">Explore Menu</a>
+      <a href="reservations.html" class="btn btn-ghost btn-liquid">Book a Table</a>
+    </div>
+
+    <div class="hero-scroll">
+      <span>Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE CARDS -->
+<section id="features">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">What We Offer</div>
+      <h2 class="section-title">A Complete <em>Dining Universe</em></h2>
+    </div>
+    <div class="features-grid">
+      <a href="menu.html" class="feature-card reveal" data-delay="100">
+        <span class="feature-icon">🍽</span>
+        <div class="feature-title">Curated Menu</div>
+        <p class="feature-desc">Farm-to-table seasonal dishes crafted by Michelin-starred chef Marco Ferreira. Every plate is a story.</p>
+        <div class="feature-link">Explore Menu <span>→</span></div>
+      </a>
+      <a href="reservations.html" class="feature-card reveal" data-delay="200">
+        <span class="feature-icon">🕯</span>
+        <div class="feature-title">Reserve Your Evening</div>
+        <p class="feature-desc">Secure your table with live availability, private dining options, and personalized requests.</p>
+        <div class="feature-link">Make a Reservation <span>→</span></div>
+      </a>
+      <a href="kitchen.html" class="feature-card reveal" data-delay="300">
+        <span class="feature-icon">👨‍🍳</span>
+        <div class="feature-title">Live Kitchen</div>
+        <p class="feature-desc">Peek behind the scenes. Watch our chefs in real time and discover the story behind every dish.</p>
+        <div class="feature-link">Our Story <span>→</span></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- SIGNATURE DISH -->
+<section id="signature">
+  <div class="orb orb-ember" style="width:500px;height:500px;top:-100px;left:-100px;"></div>
+  <div class="orb orb-gold" style="width:400px;height:400px;bottom:-100px;right:-50px;"></div>
+  <div class="container">
+    <div class="sig-inner">
+      <div class="sig-visual reveal from-left">
+        <img src="images/saffron_risotto.png" alt="Saffron Risotto" id="dish-img-static" style="width:100%; height:100%; object-fit:cover; border-radius:20px; box-shadow:var(--shadow-xl);"/>
+        <div class="sig-badge">
+          <div class="sig-badge-num">★</div>
+          <div class="sig-badge-lbl">Chef's Pick</div>
+        </div>
+      </div>
+      <div class="sig-text reveal from-right">
+        <div class="sig-subtitle">Tonight's Signature</div>
+        <h2 class="sig-title">Saffron Risotto with <em>Black Truffle</em></h2>
+        <p class="sig-desc">A velvety Carnaroli risotto infused with hand-picked saffron from La Mancha, finished with shaved Périgord black truffle, aged Parmigiano Reggiano, and a golden butter emulsion. A dish that whispers luxury in every spoonful.</p>
+        <div class="sig-ingredients">
+          <span class="ingredient">Carnaroli Rice</span>
+          <span class="ingredient">Saffron</span>
+          <span class="ingredient">Black Truffle</span>
+          <span class="ingredient">Parmigiano</span>
+          <span class="ingredient">White Wine</span>
+          <span class="ingredient">Organic Butter</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;">
+          <div class="stars" id="sig-stars"></div>
+          <span style="font-size:13px;color:var(--text-dim)">Rated 4.9 by 847 guests</span>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+          <a href="menu.html" class="btn btn-primary btn-liquid">View Full Menu</a>
+          <span class="tag tag-chef">Chef's Special</span>
+          <span class="tag tag-vegan">Gluten Free</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ATMOSPHERE GALLERY -->
+<section id="atmosphere">
+  <div class="container">
+    <div class="reveal" style="text-align:center;">
+      <div class="section-label">The Experience</div>
+      <h2 class="section-title">Every Moment, <em>Crafted</em></h2>
+      <p class="section-sub" style="margin:0 auto;text-align:center;">From the first glance to the last sip, Aurora Bistro is designed to linger in memory.</p>
+    </div>
+    <div class="atmo-grid reveal" style="margin-top:48px" data-delay="200">
+      <div class="atmo-cell tall"><img src="images/dining_room.png" alt="The Dining Room" style="width:100%; height:100%; object-fit:cover;"/><div class="atmo-overlay"><div class="atmo-label">The Dining Room</div></div></div>
+      <div class="atmo-cell"><img src="images/wine_bottles.png" alt="Wine Selection" style="width:100%; height:100%; object-fit:cover;"/><div class="atmo-overlay"><div class="atmo-label">Wine Selection</div></div></div>
+      <div class="atmo-cell"><img src="images/seasonal_ingredients.png" alt="Seasonal Ingredients" style="width:100%; height:100%; object-fit:cover;"/><div class="atmo-overlay"><div class="atmo-label">Seasonal Ingredients</div></div></div>
+      <div class="atmo-cell"><img src="images/artisan_dessert.png" alt="Artisan Desserts" style="width:100%; height:100%; object-fit:cover;"/><div class="atmo-overlay"><div class="atmo-label">Artisan Desserts</div></div></div>
+      <div class="atmo-cell"><img src="images/private_vault.png" alt="Private Dining" style="width:100%; height:100%; object-fit:cover;"/><div class="atmo-overlay"><div class="atmo-label">Private Dining</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section id="newsletter">
+  <div class="container">
+    <div class="nl-inner">
+      <div class="reveal">
+        <div class="section-label">Stay in Touch</div>
+        <h2 class="section-title" style="font-size:36px;">Join the <em>Inner Circle</em></h2>
+        <p class="section-sub">Seasonal menus, exclusive events, and chef's table invitations — straight to your inbox.</p>
+      </div>
+      <div class="reveal from-right" data-delay="100">
+        <div class="nl-form">
+          <input class="nl-input" type="email" placeholder="your@email.com" id="nl-email"/>
+          <button class="nl-btn btn-liquid" onclick="nlSubmit()">Subscribe</button>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:10px;">We respect your privacy. Unsubscribe anytime.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">Aurora Bistro</div>
+        <p class="footer-desc">Where culinary artistry meets warm hospitality. Located in the heart of the city, open Tuesday through Sunday.</p>
+        <div style="margin-top:20px;display:flex;gap:14px;">
+          <span style="font-size:20px;cursor:pointer;opacity:0.6;transition:opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">𝕏</span>
+          <span style="font-size:20px;cursor:pointer;opacity:0.6;transition:opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">📸</span>
+          <span style="font-size:20px;cursor:pointer;opacity:0.6;transition:opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">▶</span>
+        </div>
+      </div>
+      <div>
+        <div class="footer-heading">Navigation</div>
+        <ul class="footer-links">
+          <li><a href="menu.html">Our Menu</a></li>
+          <li><a href="reservations.html">Reservations</a></li>
+          <li><a href="kitchen.html">Our Story</a></li>
+          <li><a href="reviews.html">Reviews</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-heading">Hours</div>
+        <ul class="footer-links">
+          <li><a href="#">Tue–Thu: 17:00–22:00</a></li>
+          <li><a href="#">Fri–Sat: 17:00–23:30</a></li>
+          <li><a href="#">Sunday: 12:00–20:00</a></li>
+          <li><a href="#">Monday: Closed</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-heading">Contact</div>
+        <ul class="footer-links">
+          <li><a href="tel:+11234567890">+1 (123) 456-7890</a></li>
+          <li><a href="mailto:hello@aurorabistro.com">hello@aurorabistro.com</a></li>
+          <li><a href="#">42 Ember Lane, Downtown</a></li>
+          <li><a href="admin.html" style="color:var(--text-muted)">Staff Login →</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Aurora Bistro. All rights reserved.</span>
+      <span>Designed with passion · Developer Portfolio Showcase</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/aurora.js"></script>
+<script>
+// ═════════════════════════════════════════════════════════
+//  Aurora Bistro — Home Page Script
+// ═════════════════════════════════════════════════════════
+const TAU = Math.PI*2;
+const rnd = (a,b)=>a+Math.random()*(b-a);
+const pick = arr=>arr[Math.floor(Math.random()*arr.length)];
+
+// ── BOKEH PARTICLE SYSTEM ────────────────────────────────
+(function(){
+  const canvas = document.getElementById('bokeh-canvas');
+  const ctx = canvas.getContext('2d');
+  let W,H,particles=[];
+
+  function resize(){
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function Particle(){
+    this.x = rnd(0,W);
+    this.y = rnd(0,H);
+    this.r = rnd(1,12);
+    this.alpha = rnd(0.05,0.35);
+    this.speed = rnd(0.08,0.35);
+    this.drift = rnd(-0.3,0.3);
+    this.hue = rnd(28,52); // golden
+    this.phase = rnd(0,TAU);
+  }
+  Particle.prototype.update = function(t){
+    this.y -= this.speed;
+    this.x += Math.sin(t*0.5+this.phase)*0.3 + this.drift*0.1;
+    if(this.y < -this.r*2){
+      this.y = H + this.r;
+      this.x = rnd(0,W);
+    }
+  };
+  Particle.prototype.draw = function(ctx){
+    const g = ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r);
+    g.addColorStop(0,`hsla(${this.hue},80%,70%,${this.alpha})`);
+    g.addColorStop(1,'transparent');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,this.r,0,TAU);
+    ctx.fill();
+  };
+
+  function init(){
+    resize();
+    particles = Array.from({length:80},()=>new Particle());
+  }
+
+  let t=0;
+  function loop(){
+    ctx.clearRect(0,0,W,H);
+
+    // Ambient gradient overlay
+    const bg = ctx.createRadialGradient(W/2,H*0.85,0,W/2,H*0.5,H*0.8);
+    bg.addColorStop(0,'rgba(30,16,6,0.4)');
+    bg.addColorStop(1,'rgba(5,3,2,0.85)');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0,0,W,H);
+
+    t += 0.008;
+    particles.forEach(p=>{ p.update(t); p.draw(ctx); });
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('resize', ()=>{ resize(); particles.forEach(p=>{p.x=rnd(0,W);p.y=rnd(0,H);}); });
+  init(); loop();
+})();
+
+// ── TABLE SCENE CANVAS ──────────────────────────────────
+(function(){
+  const canvas = document.getElementById('table-canvas');
+  const ctx = canvas.getContext('2d');
+  let W,H,t=0,animating=true;
+
+  function resize(){
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function drawWoodGrain(ctx,x,y,w,h){
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x,y,w,h);
+    const g = ctx.createLinearGradient(x,y,x,y+h);
+    g.addColorStop(0,'rgba(52,32,12,0.9)');
+    g.addColorStop(0.3,'rgba(44,26,8,0.95)');
+    g.addColorStop(0.7,'rgba(56,36,14,0.9)');
+    g.addColorStop(1,'rgba(36,20,6,0.95)');
+    ctx.fillStyle = g; ctx.fill();
+    // grain lines
+    for(let i=0;i<12;i++){
+      const ly = y + (h/12)*i + rnd(-4,4);
+      ctx.beginPath();
+      ctx.moveTo(x, ly);
+      ctx.bezierCurveTo(x+w*0.3,ly+rnd(-3,3),x+w*0.7,ly+rnd(-3,3),x+w,ly+rnd(-4,4));
+      ctx.strokeStyle = `rgba(${rnd(60,90)},${rnd(36,60)},${rnd(10,22)},0.25)`;
+      ctx.lineWidth = rnd(0.5,1.5);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawPlate(ctx,cx,cy,R){
+    // Shadow
+    const sg = ctx.createRadialGradient(cx,cy+8,0,cx,cy+8,R*1.1);
+    sg.addColorStop(0,'rgba(0,0,0,0.6)');
+    sg.addColorStop(1,'transparent');
+    ctx.fillStyle = sg;
+    ctx.beginPath(); ctx.ellipse(cx,cy+8,R*1.05,R*0.25,0,0,TAU); ctx.fill();
+
+    // Plate base
+    const pg = ctx.createRadialGradient(cx-R*0.25,cy-R*0.25,0,cx,cy,R);
+    pg.addColorStop(0,'rgba(252,248,244,0.98)');
+    pg.addColorStop(0.7,'rgba(240,234,225,0.96)');
+    pg.addColorStop(1,'rgba(220,215,205,0.94)');
+    ctx.fillStyle = pg;
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,TAU); ctx.fill();
+
+    // Plate rim
+    ctx.strokeStyle = 'rgba(200,190,175,0.6)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx,cy,R-4,0,TAU); ctx.stroke();
+    ctx.strokeStyle = 'rgba(220,212,200,0.3)';
+    ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.arc(cx,cy,R-8,0,TAU); ctx.stroke();
+
+    // Gold rim detail
+    ctx.strokeStyle = 'rgba(212,168,60,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cx,cy,R-2,0,TAU); ctx.stroke();
+  }
+
+  function drawRisotto(ctx,cx,cy,r,t){
+    // Risotto mound
+    const rg = ctx.createRadialGradient(cx-r*0.2,cy-r*0.2,0,cx,cy,r);
+    rg.addColorStop(0,'rgba(240,200,80,0.95)');
+    rg.addColorStop(0.4,'rgba(210,165,60,0.92)');
+    rg.addColorStop(0.8,'rgba(180,130,40,0.88)');
+    rg.addColorStop(1,'rgba(150,100,20,0.6)');
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.ellipse(cx,cy,r*0.85,r*0.55,0,0,TAU);
+    ctx.fill();
+    // Texture
+    for(let i=0;i<28;i++){
+      const a = (i/28)*TAU, rd = rnd(r*0.1,r*0.7);
+      const px = cx+Math.cos(a)*rd*0.85, py = cy+Math.sin(a)*rd*0.55;
+      ctx.fillStyle = `rgba(${rnd(180,250)},${rnd(140,200)},${rnd(40,80)},0.3)`;
+      ctx.beginPath(); ctx.arc(px,py,rnd(2,5),0,TAU); ctx.fill();
+    }
+    // Truffle shavings
+    for(let i=0;i<5;i++){
+      const a = rnd(0,TAU), rd = rnd(0,r*0.5);
+      const tx = cx+Math.cos(a)*rd*0.8, ty = cy+Math.sin(a)*rd*0.5;
+      ctx.fillStyle = 'rgba(30,20,10,0.85)';
+      ctx.beginPath();
+      ctx.ellipse(tx,ty,rnd(8,18),rnd(4,8),rnd(0,TAU),0,TAU);
+      ctx.fill();
+    }
+    // Herb garnish
+    for(let i=0;i<6;i++){
+      const a = rnd(0,TAU), rd = rnd(r*0.3,r*0.7);
+      const gx = cx+Math.cos(a)*rd*0.8, gy = cy+Math.sin(a)*rd*0.5;
+      ctx.fillStyle = `rgba(40,${rnd(140,200)},40,0.9)`;
+      ctx.beginPath();
+      ctx.ellipse(gx,gy,rnd(3,7),rnd(2,4),rnd(0,TAU),0,TAU);
+      ctx.fill();
+    }
+    // Gold reduction drizzle
+    ctx.strokeStyle = 'rgba(220,175,40,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for(let i=0;i<=20;i++){
+      const a=i/20*TAU*2, rd=r*(0.3+0.2*Math.sin(i))*0.8;
+      const dx=cx+Math.cos(a)*rd*0.8, dy=cy+Math.sin(a)*rd*0.5;
+      i===0?ctx.moveTo(dx,dy):ctx.lineTo(dx,dy);
+    }
+    ctx.stroke();
+    // Highlight
+    const hl = ctx.createRadialGradient(cx-r*0.3,cy-r*0.25,0,cx-r*0.3,cy-r*0.25,r*0.3);
+    hl.addColorStop(0,'rgba(255,255,200,0.3)');
+    hl.addColorStop(1,'transparent');
+    ctx.fillStyle = hl;
+    ctx.beginPath(); ctx.ellipse(cx,cy,r*0.85,r*0.55,0,0,TAU); ctx.fill();
+  }
+
+  function drawCandle(ctx,cx,cy,t){
+    // Body
+    const cg = ctx.createLinearGradient(cx-6,0,cx+6,0);
+    cg.addColorStop(0,'rgba(240,230,210,0.95)');
+    cg.addColorStop(0.4,'rgba(255,248,230,0.98)');
+    cg.addColorStop(1,'rgba(220,210,185,0.92)');
+    ctx.fillStyle = cg;
+    ctx.fillRect(cx-5,cy-50,10,50);
+    // Flame
+    const flicker = Math.sin(t*12)*2;
+    const fg = ctx.createRadialGradient(cx,cy-58+flicker,0,cx,cy-62+flicker,20);
+    fg.addColorStop(0,'rgba(255,255,180,0.95)');
+    fg.addColorStop(0.3,'rgba(255,180,40,0.8)');
+    fg.addColorStop(0.7,'rgba(220,80,10,0.4)');
+    fg.addColorStop(1,'transparent');
+    ctx.fillStyle = fg;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy-80+flicker);
+    ctx.bezierCurveTo(cx+6,cy-68,cx+8,cy-56,cx,cy-52);
+    ctx.bezierCurveTo(cx-8,cy-56,cx-6,cy-68,cx,cy-80+flicker);
+    ctx.fill();
+    // Glow
+    const glow = ctx.createRadialGradient(cx,cy-62,0,cx,cy-62,60);
+    glow.addColorStop(0,`rgba(255,180,40,${0.15+Math.sin(t*8)*0.04})`);
+    glow.addColorStop(1,'transparent');
+    ctx.fillStyle = glow;
+    ctx.fillRect(cx-60,cy-120,120,120);
+  }
+
+  function drawWineGlass(ctx,cx,cy){
+    ctx.save();
+    ctx.strokeStyle='rgba(180,160,140,0.35)';ctx.lineWidth=1.5;ctx.fillStyle='rgba(180,140,100,0.08)';
+    // bowl
+    ctx.beginPath();
+    ctx.moveTo(cx-22,cy-80);
+    ctx.bezierCurveTo(cx-28,cy-50,cx-26,cy-20,cx-8,cy);
+    ctx.lineTo(cx+8,cy);
+    ctx.bezierCurveTo(cx+26,cy-20,cx+28,cy-50,cx+22,cy-80);
+    ctx.closePath();ctx.fill();ctx.stroke();
+    // stem
+    ctx.beginPath();ctx.moveTo(cx-4,cy);ctx.lineTo(cx+4,cy);
+    ctx.lineTo(cx+3,cy+40);ctx.lineTo(cx-3,cy+40);ctx.closePath();
+    ctx.fillStyle='rgba(180,160,140,0.2)';ctx.fill();ctx.stroke();
+    // base
+    ctx.beginPath();ctx.ellipse(cx,cy+40,18,4,0,0,TAU);
+    ctx.fillStyle='rgba(180,160,140,0.15)';ctx.fill();ctx.stroke();
+    // wine
+    ctx.beginPath();
+    ctx.moveTo(cx-18,cy-25);
+    ctx.bezierCurveTo(cx-20,cy-10,cx-20,cy-5,cx-8,cy);
+    ctx.lineTo(cx+8,cy);
+    ctx.bezierCurveTo(cx+20,cy-5,cx+20,cy-10,cx+18,cy-25);
+    ctx.closePath();
+    ctx.fillStyle='rgba(140,20,20,0.45)';ctx.fill();
+    ctx.restore();
+  }
+
+  function draw(t){
+    ctx.clearRect(0,0,W,H);
+    const CX=W/2,CY=H*0.62;
+    const TW=Math.min(W*0.85,900),TH=H*0.32;
+    const TX=CX-TW/2,TY=CY-TH*0.3;
+
+    // Table
+    drawWoodGrain(ctx,TX,TY,TW,TH);
+    // Cloth strip
+    const cloth = ctx.createLinearGradient(TX,TY+20,TX,TY+60);
+    cloth.addColorStop(0,'rgba(245,240,230,0.12)');
+    cloth.addColorStop(1,'rgba(245,240,230,0.04)');
+    ctx.fillStyle=cloth;
+    ctx.fillRect(TX,TY+20,TW,40);
+
+    // Table edge shadow
+    const es = ctx.createLinearGradient(0,TY,0,TY+20);
+    es.addColorStop(0,'rgba(0,0,0,0.5)'); es.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=es; ctx.fillRect(TX,TY,TW,20);
+
+    // Candles
+    drawCandle(ctx,CX-TW*0.35,TY+20,t);
+    drawCandle(ctx,CX+TW*0.3,TY+10,t);
+
+    // Wine glass
+    drawWineGlass(ctx,CX-TW*0.18,TY+35);
+    drawWineGlass(ctx,CX+TW*0.2,TY+30);
+
+    // Napkin
+    ctx.save();ctx.translate(CX-TW*0.35,TY+38);ctx.rotate(-0.08);
+    ctx.fillStyle='rgba(245,240,230,0.22)';
+    ctx.fillRect(-15,-5,30,35);
+    ctx.restore();
+
+    // Main plate
+    const plateR = Math.min(W*0.12, 110);
+    drawPlate(ctx,CX,TY+30,plateR);
+    drawRisotto(ctx,CX,TY+30,plateR*0.62,t);
+
+    // Smaller side plate
+    const sp = plateR*0.55;
+    drawPlate(ctx,CX+TW*0.24,TY+38,sp);
+    // Bread
+    const br=ctx.createRadialGradient(CX+TW*0.24,TY+38,0,CX+TW*0.24,TY+38,sp*0.6);
+    br.addColorStop(0,'rgba(200,140,60,0.9)'); br.addColorStop(1,'rgba(140,80,20,0.7)');
+    ctx.fillStyle=br;ctx.beginPath();ctx.ellipse(CX+TW*0.24,TY+38,sp*0.45,sp*0.3,0.2,0,TAU);ctx.fill();
+
+    // Ambient light from candles
+    [[CX-TW*0.35,TY+20],[CX+TW*0.3,TY+10]].forEach(([lx,ly])=>{
+      const lg=ctx.createRadialGradient(lx,ly,0,lx,ly,TW*0.3);
+      lg.addColorStop(0,`rgba(255,180,40,${0.08+Math.sin(t*8)*0.02})`);
+      lg.addColorStop(1,'transparent');
+      ctx.fillStyle=lg;ctx.fillRect(0,0,W,H);
+    });
+
+    // Table bottom fade
+    const fade=ctx.createLinearGradient(0,TY+TH*0.6,0,TY+TH);
+    fade.addColorStop(0,'transparent');
+    fade.addColorStop(1,'rgba(14,10,6,0.95)');
+    ctx.fillStyle=fade;ctx.fillRect(TX,TY+TH*0.6,TW,TH*0.4);
+
+    // Top vignette
+    const vig=ctx.createLinearGradient(0,0,0,H*0.45);
+    vig.addColorStop(0,'rgba(5,3,2,0.95)');
+    vig.addColorStop(1,'transparent');
+    ctx.fillStyle=vig;ctx.fillRect(0,0,W,H*0.45);
+  }
+
+  function loop(ts){
+    t = ts/1000;
+    draw(t);
+    requestAnimationFrame(loop);
+  }
+
+  // Position steam over plate
+  function positionSteam(){
+    const sw = document.getElementById('steam-wrap');
+    if(!sw) return;
+    sw.style.left = (W/2 - 60) + 'px';
+    sw.style.top  = (H*0.62 - H*0.32*0.3 + 30 - 80) + 'px';
+  }
+
+  window.addEventListener('resize',()=>{resize();positionSteam();});
+  resize();
+  positionSteam();
+  requestAnimationFrame(loop);
+})();
+
+// ── NEWSLETTER ───────────────────────────────────────────
+function nlSubmit(){
+  const v=document.getElementById('nl-email').value;
+  if(!v||!v.includes('@')){showToast('Please enter a valid email address','error');return;}
+  showToast('You\'re on the list! Welcome to Aurora\'s inner circle 🥂','success');
+  document.getElementById('nl-email').value='';
+}
+
+// ── SIGNATURE STARS ──────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  const c=document.getElementById('sig-stars');
+  if(c&&window.renderStars) renderStars(c,4.9);
+});
+</script>
+</body>
+</html>

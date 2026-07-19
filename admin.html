@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Staff Dashboard — Aurora Bistro</title>
+<link rel="stylesheet" href="css/aurora.css"/>
+<style>
+/* Dashboard Layout */
+body {
+  background: #080605;
+  font-family: var(--font-sans);
+}
+.dash-wrapper {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  padding-top: var(--nav-h);
+}
+.dash-sidebar {
+  background: #0f0a07;
+  border-right: 1px solid var(--border-gold);
+  padding: 32px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dash-side-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s var(--ease);
+}
+.dash-side-btn:hover {
+  background: rgba(212,168,72,0.04);
+  color: var(--text-warm);
+}
+.dash-side-btn.active {
+  background: rgba(212,168,72,0.08);
+  color: var(--gold-300);
+  border: 1px solid var(--border-gold);
+  box-shadow: 0 0 16px rgba(212,168,72,0.08);
+}
+.dash-main {
+  padding: 40px;
+  background: radial-gradient(circle at top right, #140d08 0%, #080605 80%);
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  overflow-y: auto;
+}
+
+/* Dashboard Tabs/Panels */
+.dash-panel {
+  display: none;
+  animation: fadeUp 0.4s var(--ease) forwards;
+}
+.dash-panel.active {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Grid layout for widgets */
+.widget-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.widget-card {
+  padding: 24px;
+  border: 1px solid var(--border-warm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.widget-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.widget-val {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--gold-300);
+  text-shadow: var(--glow-gold);
+}
+
+/* CRUD Table styling */
+.crud-table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border-warm);
+}
+.crud-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+.crud-table th {
+  background: #140e0a;
+  padding: 14px 20px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid var(--border-warm);
+}
+.crud-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-warm);
+  color: var(--text-mid);
+}
+.crud-table tr:hover td {
+  background: rgba(255,255,255,0.01);
+  color: var(--text-bright);
+}
+.crud-input {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border-gold);
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: var(--text-warm);
+  font-size: 13px;
+  outline: none;
+}
+.action-btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.action-btn.edit {
+  background: rgba(212,168,72,0.1);
+  color: var(--gold-300);
+  border: 1px solid var(--border-gold);
+}
+.action-btn.delete {
+  background: rgba(192,58,16,0.1);
+  color: #ff6b5a;
+  border: 1px solid rgba(192,58,16,0.3);
+}
+.action-btn:hover {
+  filter: brightness(1.2);
+  transform: translateY(-1px);
+}
+
+/* Calendar Grid reservations */
+.res-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.res-card {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--border-warm);
+  border-radius: 10px;
+  animation: slideInRight 0.35s var(--ease-spring);
+}
+.res-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.res-name {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+.res-details {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* Charts Wrapper */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 24px;
+}
+.chart-card {
+  padding: 24px;
+  border: 1px solid var(--border-warm);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.chart-viewport {
+  position: relative;
+  width: 100%;
+  height: 220px;
+}
+#analytics-canvas, #donut-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Live Order Ticker Feed */
+.ticker-wrap {
+  padding: 20px;
+  border: 1px solid var(--border-warm);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.01);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ticker-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gold-400);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.ticker-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.ticker-item {
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.2);
+  border-left: 3px solid var(--gold-500);
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  animation: slideInLeft 0.35s var(--ease) forwards;
+}
+
+@media(max-width: 900px) {
+  .dash-wrapper {
+    grid-template-columns: 1fr;
+  }
+  .dash-sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 16px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-gold);
+  }
+  .widget-grid, .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+
+<nav id="aurora-nav" class="scrolled">
+  <a href="index.html" class="nav-logo">Aurora <span>Bistro</span></a>
+  <div class="nav-links">
+    <a href="index.html"        class="nav-link">Home</a>
+    <a href="menu.html"         class="nav-link">Menu</a>
+    <a href="reservations.html" class="nav-link">Reservations</a>
+    <a href="kitchen.html"      class="nav-link">Our Story</a>
+    <a href="reviews.html"      class="nav-link">Reviews</a>
+    <a href="admin.html"        class="nav-link active">Admin</a>
+  </div>
+  <a href="reservations.html" class="nav-cta btn-liquid">Reserve a Table</a>
+</nav>
+
+<div class="dash-wrapper">
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="dash-sidebar">
+    <div class="dash-side-btn active" onclick="switchPanel('analytics', this)">📊 Analytics</div>
+    <div class="dash-side-btn" onclick="switchPanel('menu-crud', this)">🍽 Menu Editor</div>
+    <div class="dash-side-btn" onclick="switchPanel('bookings', this)">📅 Bookings</div>
+  </aside>
+
+  <!-- MAIN DASHBOARD CONTENT -->
+  <main class="dash-main">
+    
+    <!-- PANEL 1: ANALYTICS -->
+    <div class="dash-panel active" id="panel-analytics">
+      <div class="reveal">
+        <h2 style="font-family:var(--font-serif); color:var(--text-bright); font-size:28px;">Live Analytics</h2>
+        <p style="font-size:13px; color:var(--text-dim); margin-top:4px;">Real-time metrics, telemetry trends, and general booking counts.</p>
+      </div>
+
+      <!-- Live Counters -->
+      <div class="widget-grid reveal">
+        <div class="glass widget-card">
+          <span class="widget-title">Daily Revenue</span>
+          <div class="widget-val" id="val-rev">$4,280</div>
+          <span style="font-size:11px; color:var(--text-dim);">↑ 14% vs yesterday</span>
+        </div>
+        <div class="glass widget-card">
+          <span class="widget-title">Reservations Today</span>
+          <div class="widget-val" id="val-res">32</div>
+          <span style="font-size:11px; color:var(--text-dim);">8 peak slot waitlists</span>
+        </div>
+        <div class="glass widget-card">
+          <span class="widget-title">Avg Spend Per Table</span>
+          <div class="widget-val" id="val-spend">$134.20</div>
+          <span style="font-size:11px; color:var(--text-dim);">↑ 4.2% luxury wines</span>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid reveal">
+        <div class="glass chart-card">
+          <span class="widget-title">Hourly Table Traffic (Active vs Waitlist)</span>
+          <div class="chart-viewport">
+            <canvas id="analytics-canvas"></canvas>
+          </div>
+        </div>
+        <div class="glass chart-card">
+          <span class="widget-title">Popular Categories</span>
+          <div class="chart-viewport">
+            <canvas id="donut-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Orders feed -->
+      <div class="glass ticker-wrap reveal">
+        <span class="ticker-title">Live Kitchen Feed Telemetry</span>
+        <div class="ticker-items" id="live-feed">
+          <!-- Ticker rows -->
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 2: MENU CRUD -->
+    <div class="dash-panel" id="panel-menu-crud">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h2 style="font-family:var(--font-serif); color:var(--text-bright); font-size:28px;">Menu Editor</h2>
+          <p style="font-size:13px; color:var(--text-dim); margin-top:4px;">Manage starters, mains, desserts, and wine items.</p>
+        </div>
+        <button class="btn btn-primary btn-liquid" onclick="addNewDishRow()">+ Add New Dish</button>
+      </div>
+
+      <div class="glass crud-table-wrap">
+        <table class="crud-table">
+          <thead>
+            <tr>
+              <th>Dish Name</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Rating</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="crud-body">
+            <!-- Table data -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PANEL 3: BOOKINGS CALENDAR -->
+    <div class="dash-panel" id="panel-bookings">
+      <div>
+        <h2 style="font-family:var(--font-serif); color:var(--text-bright); font-size:28px;">Active Bookings</h2>
+        <p style="font-size:13px; color:var(--text-dim); margin-top:4px;">Real-time update stream of incoming guest reservations.</p>
+      </div>
+
+      <div class="res-list-container" id="bookings-list">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="js/aurora.js"></script>
+<script>
+// ═════════════════════════════════════════════════════════
+//  Dashboard State, Live Charts, and CRUD Controller
+// ═════════════════════════════════════════════════════════
+
+let menuItemsList = [
+  { name: "Saffron Risotto with Truffle", category: "Mains", price: 42, rating: 4.9 },
+  { name: "A5 Striploin Wagyu", category: "Mains", price: 68, rating: 4.9 },
+  { name: "Burrata Bruschetta", category: "Starters", price: 18, rating: 4.7 },
+  { name: "Valrhona Fondant", category: "Desserts", price: 16, rating: 4.9 },
+  { name: "Truffle Negroni", category: "Drinks", price: 18, rating: 4.8 }
+];
+
+function switchPanel(panelId, btnEl) {
+  document.querySelectorAll('.dash-side-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
+  
+  btnEl.classList.add('active');
+  document.getElementById(`panel-${panelId}`).classList.add('active');
+  
+  if (panelId === 'analytics') {
+    initAnalyticsCharts();
+  }
+}
+
+// ── CRUD EDIT SYSTEM ──────────────────────────────────────
+function renderCRUD() {
+  const body = document.getElementById('crud-body');
+  body.innerHTML = '';
+  
+  menuItemsList.forEach((dish, idx) => {
+    const tr = document.createElement('tr');
+    tr.id = `crud-row-${idx}`;
+    tr.innerHTML = `
+      <td><input type="text" class="crud-input" value="${dish.name}" onchange="updateDish(${idx}, 'name', this.value)"/></td>
+      <td>
+        <select class="crud-input" onchange="updateDish(${idx}, 'category', this.value)">
+          <option value="Starters" ${dish.category==='Starters'?'selected':''}>Starters</option>
+          <option value="Mains" ${dish.category==='Mains'?'selected':''}>Mains</option>
+          <option value="Desserts" ${dish.category==='Desserts'?'selected':''}>Desserts</option>
+          <option value="Drinks" ${dish.category==='Drinks'?'selected':''}>Drinks</option>
+        </select>
+      </td>
+      <td>$<input type="number" class="crud-input" style="width:70px;" value="${dish.price}" onchange="updateDish(${idx}, 'price', parseFloat(this.value))"/></td>
+      <td>${dish.rating} ★</td>
+      <td>
+        <button class="action-btn edit" onclick="saveCRUDNotification(${idx})">Save</button>
+        <button class="action-btn delete" onclick="deleteCRUD(${idx})">Delete</button>
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+function updateDish(idx, key, val) {
+  menuItemsList[idx][key] = val;
+}
+
+function saveCRUDNotification(idx) {
+  showToast(`Dish changes saved for "${menuItemsList[idx].name}"!`, "success");
+}
+
+function deleteCRUD(idx) {
+  const name = menuItemsList[idx].name;
+  menuItemsList.splice(idx, 1);
+  renderCRUD();
+  showToast(`Removed "${name}" from menu database.`, "info");
+}
+
+function addNewDishRow() {
+  menuItemsList.unshift({ name: "New Handcrafted Dish", category: "Mains", price: 24, rating: 5.0 });
+  renderCRUD();
+  showToast("Blank record appended. Please fill values.", "success");
+}
+
+// ── REALTIME RESERVATION LIST ────────────────────────────
+function renderBookings() {
+  const container = document.getElementById('bookings-list');
+  const stored = JSON.parse(localStorage.getItem('reservations') || '[]');
+  
+  // Default mock reservations if none in localStorage
+  const defaults = [
+    { id: "#RES-8891", name: "Alexander Mercer", guests: 2, date: "20 July 2026", time: "19:00", table: "dining-room" },
+    { id: "#RES-8892", name: "Clara von Bismark", guests: 4, date: "20 July 2026", time: "18:30", table: "window" },
+    { id: "#RES-8893", name: "Marcus Aurelius", guests: 3, date: "21 July 2026", time: "20:00", table: "bar" }
+  ];
+  
+  const all = [...stored, ...defaults];
+  container.innerHTML = '';
+  
+  all.forEach(res => {
+    const card = document.createElement('div');
+    card.className = 'glass res-card';
+    card.innerHTML = `
+      <div class="res-meta">
+        <div class="res-name">${res.name}</div>
+        <div class="res-details">${res.guests} Guests · ${res.date} at ${res.time} · Table: ${res.table}</div>
+      </div>
+      <div style="font-family:var(--font-mono); font-size:12px; color:var(--gold-400);">${res.id}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// ── TELEMETRY TICKER FEED ────────────────────────────────
+const foodFeed = [
+  "New Order: Burrata Bruschetta to Table 4",
+  "Status: Saffron Risotto simmering on Hearth 2",
+  "Status: Wagyu Striploin entering oak wood grill",
+  "Table 8 billed for total of $248.00",
+  "New reservation alert: John Doe for 19:30"
+];
+
+function triggerTickerFeed() {
+  const container = document.getElementById('live-feed');
+  const row = document.createElement('div');
+  row.className = 'ticker-item';
+  
+  const item = foodFeed[Math.floor(Math.random()*foodFeed.length)];
+  row.innerHTML = `<span>${item}</span><span style="font-family:var(--font-mono); color:var(--text-dim);">${new Date().toLocaleTimeString()}</span>`;
+  
+  container.insertBefore(row, container.firstChild);
+  if (container.children.length > 5) {
+    container.removeChild(container.lastChild);
+  }
+}
+setInterval(triggerTickerFeed, 4000);
+
+// ── CANVAS CHART ENGINE ───────────────────────────────────
+function initAnalyticsCharts() {
+  const canvas = document.getElementById('analytics-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  // Set dimensions based on client bounds
+  const W = canvas.width = canvas.offsetWidth;
+  const H = canvas.height = canvas.offsetHeight;
+  
+  ctx.clearRect(0,0,W,H);
+  
+  // Grid lines
+  ctx.strokeStyle = "rgba(212,168,72,0.1)";
+  ctx.lineWidth = 1;
+  for(let i=1; i<5; i++) {
+    const y = H - (H/5)*i;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  
+  // Data values hourly traffic (Bar graph)
+  const traffic = [20, 45, 82, 95, 78, 62, 38];
+  const maxVal = 100;
+  const paddingX = 40;
+  const barWidth = (W - paddingX*2) / traffic.length - 12;
+  
+  traffic.forEach((val, idx) => {
+    const x = paddingX + idx * ((W - paddingX*2)/traffic.length) + 6;
+    const barH = (val / maxVal) * (H * 0.76);
+    const y = H - barH - 20;
+    
+    // Draw bar background shadow
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.fillRect(x+2, y+2, barWidth, barH);
+    
+    // Draw bar golden gradient
+    const g = ctx.createLinearGradient(x, y, x, y+barH);
+    g.addColorStop(0, "rgba(212,168,72,0.85)");
+    g.addColorStop(1, "rgba(180,110,32,0.45)");
+    ctx.fillStyle = g;
+    ctx.fillRect(x, y, barWidth, barH);
+    
+    // Label hour values
+    ctx.fillStyle = "rgba(255,255,255,0.4)";
+    ctx.font = "9px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(`${17+idx}:00`, x+barWidth/2, H - 4);
+  });
+  
+  // Donut chart categories
+  const donut = document.getElementById('donut-canvas');
+  if(donut) {
+    const dCtx = donut.getContext('2d');
+    const dW = donut.width = donut.offsetWidth;
+    const dH = donut.height = donut.offsetHeight;
+    dCtx.clearRect(0,0,dW,dH);
+    
+    const cx = dW/2, cy = dH/2;
+    const r = Math.min(dW, dH)*0.32;
+    
+    // Simple segment drawing
+    let total = 100;
+    let segments = [
+      { val: 45, color: "#d4a84c" }, // Mains
+      { val: 25, color: "#e07020" }, // Starters
+      { val: 18, color: "#8c2e08" }, // Desserts
+      { val: 12, color: "#e8d0a0" }  // Drinks
+    ];
+    
+    let curAngle = -Math.PI/2;
+    segments.forEach(seg => {
+      const angle = (seg.val / total) * (Math.PI*2);
+      dCtx.fillStyle = seg.color;
+      dCtx.beginPath();
+      dCtx.moveTo(cx, cy);
+      dCtx.arc(cx, cy, r, curAngle, curAngle+angle);
+      dCtx.closePath();
+      dCtx.fill();
+      curAngle += angle;
+    });
+    
+    // Inner cutout for donut shape
+    dCtx.fillStyle = "#0c0805"; // Match background
+    dCtx.beginPath();
+    dCtx.arc(cx, cy, r*0.62, 0, Math.PI*2);
+    dCtx.fill();
+  }
+}
+
+// Initialise
+renderCRUD();
+renderBookings();
+setTimeout(initAnalyticsCharts, 300);
+
+// Add initial trigger logs
+for(let i=0; i<4; i++) {
+  triggerTickerFeed();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Reviews — Aurora Bistro</title>
+<meta name="description" content="Read reviews and testimonials from our dining guests. Real reviews, ratings, and culinary feedback for Aurora Bistro."/>
+<link rel="stylesheet" href="css/aurora.css"/>
+<style>
+/* 3D Review Carousel */
+.carousel-viewport {
+  perspective: 1200px;
+  width: 100%;
+  height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  margin-top: 48px;
+}
+.carousel-track {
+  width: 320px;
+  height: 380px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.review-card {
+  position: absolute;
+  inset: 0;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  backface-visibility: hidden;
+  border-radius: 20px;
+  transition: all 0.5s var(--ease);
+  cursor: pointer;
+  user-select: none;
+}
+.review-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.author-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--border-gold);
+  background: linear-gradient(135deg, var(--gold-700), var(--gold-500));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--bg-void);
+}
+.author-info {
+  flex: 1;
+}
+.author-name {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+.author-role {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.review-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-mid);
+  font-style: italic;
+}
+.review-emoji {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  font-size: 28px;
+  opacity: 0.15;
+  animation: floatB 4s ease-in-out infinite;
+}
+
+/* Rating Badge Header */
+.rating-badge-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 24px;
+}
+.rating-badge {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold-500), var(--gold-300));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-lg), var(--glow-gold);
+  animation: pulseSc 3s ease-in-out infinite;
+  margin-bottom: 16px;
+}
+.rating-num {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--bg-void);
+}
+.rating-star-icon {
+  font-size: 12px;
+  color: var(--bg-dark);
+}
+
+/* Carousel Controls */
+.carousel-ctrls {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 32px;
+}
+.ctrl-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-warm);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.25s var(--ease);
+}
+.ctrl-btn:hover {
+  border-color: var(--gold-500);
+  background: rgba(212,168,72,0.06);
+  transform: scale(1.08);
+}
+</style>
+</head>
+<body>
+
+<nav id="aurora-nav">
+  <a href="index.html" class="nav-logo">Aurora <span>Bistro</span></a>
+  <div class="nav-links">
+    <a href="index.html"        class="nav-link">Home</a>
+    <a href="menu.html"         class="nav-link">Menu</a>
+    <a href="reservations.html" class="nav-link">Reservations</a>
+    <a href="kitchen.html"      class="nav-link">Our Story</a>
+    <a href="reviews.html"      class="nav-link active">Reviews</a>
+    <a href="admin.html"        class="nav-link">Admin</a>
+  </div>
+  <a href="reservations.html" class="nav-cta btn-liquid">Reserve a Table</a>
+</nav>
+
+<div class="page-hero">
+  <div class="page-hero-bg"></div>
+  <div class="page-hero-content">
+    <div class="section-label">Guest Feedback</div>
+    <h1 class="section-title">A Symphony of <em>Gratitude</em></h1>
+    <p class="section-sub">Read about the sensory moments that lingered after dinner. Real testimonials from verified dining reservations.</p>
+  </div>
+</div>
+
+<section style="padding: 48px 0 100px; background: var(--bg-deep); position:relative; overflow:hidden;">
+  <div class="orb orb-gold" style="width:500px; height:500px; top:10%; left:-200px;"></div>
+  <div class="orb orb-ember" style="width:400px; height:400px; bottom:10%; right:-150px;"></div>
+  
+  <div class="container">
+    <!-- Pulse Rating Badge -->
+    <div class="rating-badge-container reveal">
+      <div class="rating-badge">
+        <div class="rating-num" id="live-rating-num">4.8</div>
+        <div class="rating-star-icon">★★★★★</div>
+      </div>
+      <p style="font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.1em;">Aggregate Score from 1,208 guests</p>
+    </div>
+
+    <!-- 3D Card Carousel -->
+    <div class="carousel-viewport">
+      <div class="carousel-track" id="carousel-track">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="carousel-ctrls reveal">
+      <button class="ctrl-btn" onclick="rotateCarousel(-1)">◀</button>
+      <button class="ctrl-btn" onclick="rotateCarousel(1)">▶</button>
+    </div>
+  </div>
+</section>
+
+<script src="js/aurora.js"></script>
+<script>
+// ═════════════════════════════════════════════════════════
+//  3D Reviews Rotation & Easing
+// ═════════════════════════════════════════════════════════
+
+const reviews = [
+  {
+    name: "Alexander Mercer",
+    role: "Culinary Critic, Food&Vibe",
+    initial: "AM",
+    text: "The Saffron Risotto is a masterclass in culinary balance. The black truffle notes carry a rich woodiness that contrasts beautifully with the saffron sweetness. Outstanding warm design aesthetic.",
+    stars: 5,
+    emoji: "🥂"
+  },
+  {
+    name: "Clara von Bismark",
+    role: "Local Dining Aficionado",
+    initial: "CB",
+    text: "Aurora Bistro has that elusive blend of luxury and absolute comfort. The dining room feels incredibly cozy. Try the duck confit – the skin crackles like thin glass.",
+    stars: 5,
+    emoji: "🕯"
+  },
+  {
+    name: "Marcus Aurelius",
+    role: "Tasting Menu Explorer",
+    initial: "MA",
+    text: "I was fascinated by the detail of the open wood fire preparation. You can taste the dry oak embers inside the strips of stripping steak. Splendid wine choices.",
+    stars: 4.8,
+    emoji: "🥩"
+  },
+  {
+    name: "Elena Rostova",
+    role: "Pastry & Sorbet Lover",
+    initial: "ER",
+    text: "The Rose meringue pavlova is a masterpiece that almost feels too beautiful to spoon. Truly a cinematic, high-detail culinary experience that stayed with me all week.",
+    stars: 5,
+    emoji: "🧁"
+  },
+  {
+    name: "Dr. Ethan Cole",
+    role: "Private Table Regular",
+    initial: "EC",
+    text: "Reserved the mahogany private dining vault for a family milestone. The service was fluid, silent, and highly attentive. The red Burgundy pairings were sensational.",
+    stars: 5,
+    emoji: "🍷"
+  }
+];
+
+let angle = 0;
+const theta = 360 / reviews.length;
+
+function buildCarousel() {
+  const track = document.getElementById('carousel-track');
+  track.innerHTML = '';
+  
+  reviews.forEach((r, idx) => {
+    const card = document.createElement('div');
+    card.className = 'glass glass-glow review-card';
+    
+    // Position cards radially in 3D circle space
+    const radY = idx * theta;
+    card.style.transform = `rotateY(${radY}deg) translateZ(340px)`;
+    
+    const starsHtml = '★'.repeat(Math.round(r.stars)) + '☆'.repeat(5 - Math.round(r.stars));
+    
+    card.innerHTML = `
+      <div class="review-author">
+        <div class="author-avatar">${r.initial}</div>
+        <div class="author-info">
+          <div class="author-name">${r.name}</div>
+          <div class="author-role">${r.role}</div>
+        </div>
+      </div>
+      <div class="divider" style="margin: 8px 0;"></div>
+      <p class="review-text">"${r.text}"</p>
+      <div class="stars" style="margin-top:auto;">
+        ${starsHtml.split('').map(s => `<span class="star ${s==='☆'?'empty':''}">${s}</span>`).join('')}
+      </div>
+      <div class="review-emoji">${r.emoji}</div>
+    `;
+    
+    track.appendChild(card);
+  });
+}
+
+function rotateCarousel(dir) {
+  angle -= dir * theta;
+  const track = document.getElementById('carousel-track');
+  track.style.transform = `rotateY(${angle}deg)`;
+}
+
+// Live rating badge float simulation
+let liveRating = 4.82;
+setInterval(() => {
+  liveRating += (Math.random() * 0.01 - 0.005);
+  liveRating = Math.max(4.78, Math.min(4.9, liveRating));
+  const el = document.getElementById('live-rating-num');
+  if(el) el.textContent = liveRating.toFixed(2);
+}, 2000);
+
+buildCarousel();
+</script>
+</body>
+</html>

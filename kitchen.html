@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Our Story & Live Kitchen — Aurora Bistro</title>
+<meta name="description" content="Discover the story behind Aurora Bistro. Step inside our kitchen, see live cooking telemetry, and follow our farm-to-table journey."/>
+<link rel="stylesheet" href="css/aurora.css"/>
+<style>
+/* Split-Screen Interactive Story Section */
+.story-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+  position: relative;
+}
+.story-visual-side {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  background: linear-gradient(rgba(14,10,6,0.68), rgba(14,10,6,0.92)), url('images/dining_room.png') center/cover;
+  overflow: hidden;
+}
+#kitchen-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.story-text-side {
+  padding: 120px 64px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 120px;
+  background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
+}
+.story-chapter {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 50vh;
+  justify-content: center;
+}
+.chapter-num {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--gold-500);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.chapter-title {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+.chapter-text {
+  font-size: 15px;
+  color: var(--text-mid);
+  line-height: 1.8;
+}
+
+/* Telemetry Kitchen Status Widget */
+.kitchen-hud {
+  position: absolute;
+  top: 96px;
+  left: 24px;
+  right: 24px;
+  padding: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.hud-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(212, 168, 72, 0.12);
+  border: 1px solid var(--border-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--gold-400);
+}
+.hud-icon-wrap.active-cooking {
+  animation: pulseSc 1.2s ease-in-out infinite;
+}
+.hud-info {
+  flex: 1;
+}
+.hud-status-lbl {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.hud-dish-name {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-top: 2px;
+}
+
+/* Stat Counter Panels */
+.story-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 32px;
+}
+.story-stat-card {
+  padding: 20px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border-warm);
+  border-radius: 12px;
+  text-align: center;
+}
+.stat-number {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--gold-300);
+}
+.stat-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+@media(max-width: 900px) {
+  .story-wrapper {
+    grid-template-columns: 1fr;
+  }
+  .story-visual-side {
+    position: relative;
+    height: 40vh;
+  }
+  .story-text-side {
+    padding: 48px 24px;
+    gap: 60px;
+  }
+  .story-chapter {
+    min-height: auto;
+  }
+}
+</style>
+</head>
+<body>
+
+<nav id="aurora-nav">
+  <a href="index.html" class="nav-logo">Aurora <span>Bistro</span></a>
+  <div class="nav-links">
+    <a href="index.html"        class="nav-link">Home</a>
+    <a href="menu.html"         class="nav-link">Menu</a>
+    <a href="reservations.html" class="nav-link">Reservations</a>
+    <a href="kitchen.html"      class="nav-link active">Our Story</a>
+    <a href="reviews.html"      class="nav-link">Reviews</a>
+    <a href="admin.html"        class="nav-link">Admin</a>
+  </div>
+  <a href="reservations.html" class="nav-cta btn-liquid">Reserve a Table</a>
+</nav>
+
+<div class="story-wrapper">
+  <!-- LEFT SIDE: COOKING & INGREDIENT PHYSICS CANVAS -->
+  <div class="story-visual-side">
+    <!-- Live Status HUD Widget -->
+    <div class="glass glass-glow kitchen-hud">
+      <div class="hud-icon-wrap active-cooking" id="hud-status-icon">🍳</div>
+      <div class="hud-info">
+        <div class="hud-status-lbl" id="hud-status-label">Now Cooking</div>
+        <div class="hud-dish-name" id="hud-dish-name">Risotto with Black Truffle</div>
+      </div>
+      <div class="live-dot" style="font-size:11px; font-weight:600; color:var(--accent-lime)">Live Telemetry</div>
+    </div>
+
+    <canvas id="kitchen-canvas"></canvas>
+  </div>
+
+  <!-- RIGHT SIDE: STORYTELLINGCHAPTERS -->
+  <div class="story-text-side">
+    <!-- Chapter 1 -->
+    <div class="story-chapter reveal">
+      <span class="chapter-num">Chapter I</span>
+      <h2 class="chapter-title">The Soil & The Farm</h2>
+      <p class="chapter-text">
+        Every dish starts deep in the rich local volcanic soil. We partner directly with family orchards and sustainable biodynamic growers within a 40-mile radius. Radishes are pulled at dawn, heritage wheat is milled weekly, and olives are handpressed exclusively for our culinary line.
+      </p>
+      <div class="story-stats">
+        <div class="story-stat-card">
+          <div class="stat-number" id="stat-farms">0</div>
+          <div class="stat-desc">Partner Farms</div>
+        </div>
+        <div class="story-stat-card">
+          <div class="stat-number" id="stat-radius">0</div>
+          <div class="stat-desc">Max Miles Sourced</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chapter 2 -->
+    <div class="story-chapter reveal">
+      <span class="chapter-num">Chapter II</span>
+      <h2 class="chapter-title">Fire & Preparation</h2>
+      <p class="chapter-text">
+        In our kitchen, heat is an ingredient. Our chefs work with dry white oak, open embers, and slow-burning charcoal hearths to draw out hidden sugars, caramelize marrow, and impart a subtle, woody perfume to roasted mains. Control meets chaos.
+      </p>
+      <p class="chapter-text">
+        Stocks simmer for 72 hours, reducing down to a rich, glossy demi-glace. Herbs are rolled under heavy stone rollers, releasing oils right at the second of plating.
+      </p>
+    </div>
+
+    <!-- Chapter 3 -->
+    <div class="story-chapter reveal">
+      <span class="chapter-num">Chapter III</span>
+      <h2 class="chapter-title">The Assembly & Plate</h2>
+      <p class="chapter-text">
+        Assembly is pure geometry. Sauces form concentric gloss bands, microgreens provide contrasting acid highlights, and golden reductions tie textures together. Food is a visual promise of what your palate is about to explore.
+      </p>
+      <div style="margin-top: 16px;">
+        <a href="menu.html" class="btn btn-primary btn-liquid">Browse Tonight's Dishes</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/aurora.js"></script>
+<script>
+// ═════════════════════════════════════════════════════════
+//  Live Kitchen Telemetry Status & Ingredient Particle Sim
+// ═════════════════════════════════════════════════════════
+
+const dishesCookingList = [
+  { name: "Saffron Risotto with Truffle", icon: "🍳", action: "Simmering rice grains..." },
+  { name: "A5 Wagyu Striploin", icon: "🥩", action: "Resting on white oak embers..." },
+  { name: "Mediterranean Seabass", icon: "🐟", action: "Crisping skin on iron pan..." },
+  { name: "Valrhona Chocolate Fondant", icon: "🧁", action: "Baking inside stone oven..." },
+  { name: "Pan-Seared Duck Confit", icon: "🍗", action: "Glazing cherry reductions..." }
+];
+
+let activeDishIdx = 0;
+function cycleKitchenTelemetry() {
+  activeDishIdx = (activeDishIdx + 1) % dishesCookingList.length;
+  const dish = dishesCookingList[activeDishIdx];
+  
+  const iconEl = document.getElementById('hud-status-icon');
+  const labelEl = document.getElementById('hud-status-label');
+  const nameEl = document.getElementById('hud-dish-name');
+  
+  if (iconEl && labelEl && nameEl) {
+    iconEl.textContent = dish.icon;
+    labelEl.textContent = dish.action;
+    nameEl.textContent = dish.name;
+    
+    // Pulse animation trigger
+    iconEl.style.animation = 'none';
+    setTimeout(() => {
+      iconEl.style.animation = 'pulseSc 1.2s ease-in-out infinite';
+    }, 50);
+  }
+}
+setInterval(cycleKitchenTelemetry, 5000);
+
+// ── TELEMETRY CANVAS PHYSICS ──────────────────────────────
+(function(){
+  const canvas = document.getElementById('kitchen-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+  const TAU = Math.PI * 2;
+  const rnd = (a,b)=>a+Math.random()*(b-a);
+  const colors = ["#d4a84c", "#e07020", "#c03a10", "#50c864", "#ffffff"];
+
+  function resize(){
+    W = canvas.width = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  }
+
+  function IngredientParticle(){
+    this.x = rnd(0, W);
+    this.y = H + 20;
+    this.size = rnd(4, 10);
+    this.vx = rnd(-1, 1);
+    this.vy = rnd(-2, -5);
+    this.color = colors[Math.floor(Math.random()*colors.length)];
+    this.rot = rnd(0, TAU);
+    this.vrot = rnd(-0.05, 0.05);
+    this.alpha = rnd(0.4, 0.85);
+  }
+
+  IngredientParticle.prototype.update = function(){
+    this.x += this.vx;
+    this.y += this.vy;
+    this.rot += this.vrot;
+    // apply slight float physics
+    this.vy += 0.02; // slow down rise
+    this.alpha -= 0.003; // slowly fade out
+  };
+
+  IngredientParticle.prototype.draw = function(ctx){
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rot);
+    ctx.fillStyle = this.color;
+    ctx.globalAlpha = Math.max(0, this.alpha);
+    
+    // Draw simple food shapes
+    ctx.beginPath();
+    if (this.size > 7) {
+      // slice leaf
+      ctx.ellipse(0, 0, this.size, this.size*0.4, 0, 0, TAU);
+    } else {
+      // grain or drop
+      ctx.arc(0, 0, this.size, 0, TAU);
+    }
+    ctx.fill();
+    ctx.restore();
+  };
+
+  function resizeHandler(){
+    resize();
+  }
+  window.addEventListener('resize', resizeHandler);
+
+  resize();
+
+  function loop(){
+    // Draw base cinematic theme overlay transparently
+    ctx.clearRect(0,0,W,H);
+
+    // Warm glow source from center bottom (fire grill feel)
+    const fireGlow = ctx.createRadialGradient(W/2, H*0.88, 0, W/2, H*0.88, H*0.62);
+    fireGlow.addColorStop(0, "rgba(224,112,32,0.22)");
+    fireGlow.addColorStop(0.5, "rgba(192,58,16,0.06)");
+    fireGlow.addColorStop(1, "transparent");
+    ctx.fillStyle = fireGlow;
+    ctx.fillRect(0,0,W,H);
+
+    // Occasional spark creation
+    if (Math.random() < 0.22) {
+      particles.push(new IngredientParticle());
+    }
+
+    particles.forEach((p, idx) => {
+      p.update();
+      p.draw(ctx);
+      if (p.y < 0 || p.alpha <= 0) {
+        particles.splice(idx, 1);
+      }
+    });
+
+    // Faux flame graphics at the absolute bottom
+    ctx.fillStyle = "rgba(192,58,16,0.3)";
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    for(let x=0; x<=W; x+=40) {
+      const y = H - 15 - Math.sin(Date.now()*0.005 + x*0.01)*12;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(W, H);
+    ctx.closePath();
+    ctx.fill();
+
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+
+// ── INTERSECTION COUNTERS ────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        if (window.animateCounter) {
+          animateCounter(document.getElementById('stat-farms'), 18, 1500);
+          animateCounter(document.getElementById('stat-radius'), 40, 1500, "", " mi");
+        }
+        io.unobserve(e.target);
+      }
+    });
+  }, {threshold: 0.12});
+  
+  const target = document.getElementById('stat-farms');
+  if(target) io.observe(target.parentElement.parentElement);
+});
+</script>
+</body>
+</html>
