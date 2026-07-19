@@ -396,32 +396,44 @@ img, canvas {
   border-radius: 4px;
   margin-left: 2px;
 }
-.aura-universal-footer .credit-line {
+/* ── COMPACT INLINE TAGLINE BADGE ──────────────────────── */
+.aura-tagline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--text-warm);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
+  background: rgba(192, 126, 255, 0.05);
+  padding: 6px 16px;
+  border-radius: 50px;
+  border: 1px solid rgba(192, 126, 255, 0.25);
+  transition: all 0.3s var(--ease);
 }
-.aura-universal-footer .credit-line strong {
+.aura-tagline:hover {
+  background: rgba(192, 126, 255, 0.1);
+  border-color: rgba(192, 126, 255, 0.5);
+  box-shadow: 0 4px 20px rgba(160, 80, 255, 0.22);
+}
+.aura-tagline .tagline-logo {
+  height: 26px;
+  width: auto;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 10px rgba(160, 80, 255, 0.4);
+  object-fit: contain;
+}
+.aura-tagline strong {
   color: #c07eff;
   font-weight: 700;
-  text-shadow: 0 0 16px rgba(192, 126, 255, 0.5);
-}
-.aura-universal-footer .aura-dev-logo {
-  height: 80px;
-  width: auto;
-  border-radius: 12px;
-  box-shadow: 0 6px 28px rgba(160, 80, 255, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
-  display: block;
-}
-.aura-universal-footer .aura-dev-logo:hover {
-  transform: scale(1.06);
-  box-shadow: 0 8px 36px rgba(160, 80, 255, 0.45);
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 14px rgba(192, 126, 255, 0.55);
 }
 .aura-universal-footer .copyright-line {
   font-size: 12px;
   color: var(--text-muted);
-  margin-top: 8px;
+  margin-top: 4px;
 }
+
