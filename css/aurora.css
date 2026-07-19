@@ -408,7 +408,7 @@ img, canvas {
   color: var(--text-warm);
 }
 .aura-footer-credit .credit-logo {
-  height: 36px !important;
+  height: 42px !important;
   width: auto !important;
   border-radius: 8px !important;
   object-fit: contain !important;
