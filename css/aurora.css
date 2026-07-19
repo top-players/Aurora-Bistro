@@ -408,12 +408,16 @@ img, canvas {
   color: var(--text-warm);
 }
 .aura-footer-credit .credit-logo {
-  height: 20px !important;
+  height: 28px !important;
   width: auto !important;
-  border-radius: 4px !important;
+  border-radius: 6px !important;
   object-fit: contain !important;
   display: inline-block !important;
   vertical-align: middle !important;
+  image-rendering: -webkit-optimize-contrast !important;
+  image-rendering: crisp-edges !important;
+  filter: contrast(1.12) brightness(1.03) !important;
+  margin: 0 4px !important;
 }
 .aura-footer-credit .credit-info {
   display: inline-flex;
