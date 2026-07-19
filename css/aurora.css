@@ -353,3 +353,75 @@ img, canvas {
   text-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
 
+/* ── UNIVERSAL BOTTOM CREDIT FOOTER (ALL PAGES) ───────────────── */
+.aura-universal-footer {
+  width: 100%;
+  padding: 44px 24px;
+  background: var(--bg-void);
+  border-top: 1px solid var(--border-warm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  position: relative;
+  z-index: 10;
+  margin-top: 60px;
+}
+.aura-universal-footer .logo-brand {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--gold-300);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.2s;
+}
+.aura-universal-footer .logo-brand:hover {
+  opacity: 0.85;
+}
+.aura-universal-footer .logo-brand span {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold-400);
+  padding: 2px 6px;
+  border: 1px solid rgba(212, 168, 76, 0.3);
+  border-radius: 4px;
+  margin-left: 2px;
+}
+.aura-universal-footer .credit-line {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-warm);
+  letter-spacing: 0.08em;
+}
+.aura-universal-footer .credit-line strong {
+  color: #c07eff;
+  font-weight: 700;
+  text-shadow: 0 0 16px rgba(192, 126, 255, 0.5);
+}
+.aura-universal-footer .aura-dev-logo {
+  height: 80px;
+  width: auto;
+  border-radius: 12px;
+  box-shadow: 0 6px 28px rgba(160, 80, 255, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  display: block;
+}
+.aura-universal-footer .aura-dev-logo:hover {
+  transform: scale(1.06);
+  box-shadow: 0 8px 36px rgba(160, 80, 255, 0.45);
+}
+.aura-universal-footer .copyright-line {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
